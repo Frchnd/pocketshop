@@ -1,11 +1,13 @@
 window.PS_SAVE = (() => {
-  const KEY = 'pocket-shop-save-v5';
+  const KEY = 'pocket-shop-save-v6';
+  const LEGACY_V5 = 'pocket-shop-save-v5';
   const LEGACY_V4 = 'pocket-shop-save-v4';
   const LEGACY_V3 = 'pocket-shop-save-v3';
   const LEGACY_V2 = 'pocket-shop-save-v2';
   const LEGACY_V1 = 'pocket-shop-m0-save-v1';
 
   const clampInt=(n,min,max)=>Math.max(min,Math.min(max,Math.floor(Number(n)||0)));
+  const DEFAULT_SETTINGS=Object.freeze({music:true,sfx:true});
 
   function normalizeUpgrades(up={}){
     const defs=window.PS_DATA.upgrades;
@@ -13,6 +15,13 @@ window.PS_SAVE = (() => {
       rack:clampInt(up.rack,0,defs.rack.maxLevel),
       profit:clampInt(up.profit,0,defs.profit.maxLevel),
       patience:clampInt(up.patience,0,defs.patience.maxLevel)
+    };
+  }
+
+  function normalizeSettings(settings={}){
+    return {
+      music:settings.music===undefined?DEFAULT_SETTINGS.music:!!settings.music,
+      sfx:settings.sfx===undefined?DEFAULT_SETTINGS.sfx:!!settings.sfx
     };
   }
 
@@ -36,66 +45,53 @@ window.PS_SAVE = (() => {
     return {day:Math.max(1,Math.floor(+boost.day)),multiplier:Math.max(1,+boost.multiplier)};
   }
 
-  function save(state){
-    try{
-      const upgrades=normalizeUpgrades(state.upgrades);
-      const safe = {
-        version:5,
-        day:Math.max(1,Math.floor(state.day)),
-        coins:Math.max(0,Math.floor(state.coins)),
-        inventory:normalizeInventory(state.inventory,upgrades),
-        unlockedItems:[...new Set(state.unlockedItems || unlockedForDay(state.day))],
-        upgrades,
-        nextDayBoost:normalizeBoost(state.nextDayBoost),
-        // Active customers/events/modal positions are intentionally not saved.
-        // Reloading a running day safely returns to PREP for that same day.
-        resumePhase:state.phase==='UPGRADE'?'UPGRADE':'PREP',
-        tutorialComplete:!!state.tutorialComplete
-      };
-      localStorage.setItem(KEY, JSON.stringify(safe));
-    }catch(_){/* Gameplay remains usable if storage is blocked. */}
-  }
-
-  function normalizeLoaded(parsed){
-    if(!parsed)return null;
-    const day=Math.max(1,Math.floor(parsed.day||1));
-    const upgrades=normalizeUpgrades(parsed.upgrades||{});
+  function safeShape(source={}){
+    const day=Math.max(1,Math.floor(source.day||1));
+    const upgrades=normalizeUpgrades(source.upgrades||{});
     return {
-      version:5,
+      version:6,
       day,
-      coins:Math.max(0,Math.floor(parsed.coins||0)),
-      inventory:normalizeInventory(parsed.inventory,upgrades),
-      unlockedItems:[...new Set(parsed.unlockedItems || unlockedForDay(day))],
+      coins:Math.max(0,Math.floor(source.coins||0)),
+      inventory:normalizeInventory(source.inventory,upgrades),
+      unlockedItems:[...new Set(source.unlockedItems || unlockedForDay(day))],
       upgrades,
-      nextDayBoost:normalizeBoost(parsed.nextDayBoost),
-      resumePhase:parsed.resumePhase==='UPGRADE'?'UPGRADE':'PREP',
-      tutorialComplete:!!parsed.tutorialComplete
+      nextDayBoost:normalizeBoost(source.nextDayBoost),
+      // Active customers/events/animations/modals are deliberately not persisted.
+      // A reload during RUNNING returns safely to PREP on the same day.
+      resumePhase:source.resumePhase==='UPGRADE'||source.phase==='UPGRADE'?'UPGRADE':'PREP',
+      tutorialComplete:!!source.tutorialComplete,
+      settings:normalizeSettings(source.settings)
     };
   }
 
-  function migrateRaw(raw,expectedVersion,patch={}){
-    if(!raw)return null;
-    const old=JSON.parse(raw);
-    if(old?.version!==expectedVersion)return null;
-    const migrated=normalizeLoaded({...old,...patch,version:5});
-    localStorage.setItem(KEY,JSON.stringify(migrated));
-    return migrated;
+  function save(state){
+    try{localStorage.setItem(KEY,JSON.stringify(safeShape(state)));}
+    catch(_){/* Storage can be unavailable; gameplay continues in memory. */}
+  }
+
+  function migrateKey(key,expectedVersion,patch={}){
+    const raw=localStorage.getItem(key);if(!raw)return null;
+    const old=JSON.parse(raw);if(old?.version!==expectedVersion)return null;
+    const migrated=safeShape({...old,...patch});
+    localStorage.setItem(KEY,JSON.stringify(migrated));return migrated;
   }
 
   function load(){
     try{
-      const raw=localStorage.getItem(KEY);
-      if(raw){const parsed=JSON.parse(raw);if(parsed?.version===5)return normalizeLoaded(parsed);}
+      const current=localStorage.getItem(KEY);
+      if(current){const parsed=JSON.parse(current);if(parsed?.version===6)return safeShape(parsed);}
 
-      // M1-D -> M2. Event runtime state is intentionally not migrated/saved.
-      const v4=migrateRaw(localStorage.getItem(LEGACY_V4),4);
+      // M2 -> M3: preserve gameplay progress and add persistent audio settings.
+      const v5=migrateKey(LEGACY_V5,5,{settings:DEFAULT_SETTINGS});
+      if(v5)return v5;
+      const v4=migrateKey(LEGACY_V4,4,{settings:DEFAULT_SETTINGS});
       if(v4)return v4;
 
       const v3raw=localStorage.getItem(LEGACY_V3);
       if(v3raw){
         const old=JSON.parse(v3raw);
         if(old?.version===3){
-          const migrated=normalizeLoaded({...old,version:5,tutorialComplete:(old.day||1)>1||old.resumePhase==='UPGRADE'});
+          const migrated=safeShape({...old,settings:DEFAULT_SETTINGS,tutorialComplete:(old.day||1)>1||old.resumePhase==='UPGRADE'});
           localStorage.setItem(KEY,JSON.stringify(migrated));return migrated;
         }
       }
@@ -104,26 +100,25 @@ window.PS_SAVE = (() => {
       if(v2raw){
         const old=JSON.parse(v2raw);
         if(old?.version===2){
-          const migrated=normalizeLoaded({...old,version:5,upgrades:{rack:0,profit:0,patience:0},nextDayBoost:null,resumePhase:'PREP',tutorialComplete:(old.day||1)>1});
+          const migrated=safeShape({...old,settings:DEFAULT_SETTINGS,upgrades:{rack:0,profit:0,patience:0},nextDayBoost:null,resumePhase:'PREP',tutorialComplete:(old.day||1)>1});
           localStorage.setItem(KEY,JSON.stringify(migrated));return migrated;
         }
       }
 
-      const v1raw=localStorage.getItem(LEGACY_V1);
-      if(!v1raw)return null;
-      const old=JSON.parse(v1raw);
-      if(!old || old.version!==1)return null;
-      const migrated=normalizeLoaded({
+      const v1raw=localStorage.getItem(LEGACY_V1);if(!v1raw)return null;
+      const old=JSON.parse(v1raw);if(!old||old.version!==1)return null;
+      const migrated=safeShape({
         day:old.day||1,coins:old.coins||0,inventory:old.inventory,
-        unlockedItems:unlockedForDay(old.day||1),upgrades:{rack:0,profit:0,patience:0},tutorialComplete:(old.day||1)>1
+        unlockedItems:unlockedForDay(old.day||1),upgrades:{rack:0,profit:0,patience:0},
+        tutorialComplete:(old.day||1)>1,settings:DEFAULT_SETTINGS
       });
       localStorage.setItem(KEY,JSON.stringify(migrated));return migrated;
     }catch(_){return null;}
   }
 
   function reset(){
-    try{for(const k of [KEY,LEGACY_V4,LEGACY_V3,LEGACY_V2,LEGACY_V1])localStorage.removeItem(k);}catch(_){ }
+    try{for(const k of [KEY,LEGACY_V5,LEGACY_V4,LEGACY_V3,LEGACY_V2,LEGACY_V1])localStorage.removeItem(k);}catch(_){ }
   }
 
-  return {save,load,reset};
+  return {save,load,reset,normalizeSettings};
 })();

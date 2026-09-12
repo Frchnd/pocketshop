@@ -76,3 +76,36 @@ button{font:inherit}.app-shell{width:min(100%,430px);margin:0 auto;padding:8px 8
 @media (max-width:360px){.event-banner{top:178px;width:calc(100% - 20px)}.event-badge{top:101px;max-width:205px}}
 @media (prefers-reduced-motion:reduce){.event-banner.show{animation:none!important;opacity:1}}
 .event-banner[hidden],.event-badge[hidden]{display:none!important}
+
+/* M3 — Visual feel, lightweight animation & audio settings */
+.settings-btn{flex:0 0 30px;width:30px;height:30px;border:0;border-radius:10px;background:#fff;border:1px solid #eadfd3;color:#765f53;display:grid;place-items:center;font-size:15px;box-shadow:0 2px 0 #e8dbcf;cursor:pointer;padding:0}.settings-btn:active{transform:translateY(1px);box-shadow:0 1px 0 #e8dbcf}.settings-btn:focus-visible,.toggle-btn:focus-visible{outline:3px solid #315d9b;outline-offset:2px}
+.settings-overlay{align-items:center}.settings-card{width:calc(100% - 46px);margin:auto;padding:15px 14px;background:#fffaf1;border:2px solid #efcaa5;border-radius:23px;box-shadow:0 12px 40px rgba(71,43,35,.22)}.settings-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.settings-head small{font-size:9px;color:#957465;font-weight:1000;letter-spacing:.08em}.settings-head h2{margin:1px 0 0;color:#e6537b;font-size:24px}.setting-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 3px;border-top:1px solid #eaded1}.setting-row>div{display:flex;flex-direction:column;gap:2px}.setting-row strong{font-size:14px}.setting-row small{font-size:10px;color:#826e64}.toggle-btn{position:relative;flex:0 0 52px;width:52px;height:31px;border:0;border-radius:999px;background:#d8dddf;padding:3px;cursor:pointer;transition:background .18s ease}.toggle-btn span{display:block;width:25px;height:25px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(49,38,33,.18);transition:transform .18s ease}.toggle-btn.on{background:#66cc9c}.toggle-btn.on span{transform:translateX(21px)}.settings-note{margin:5px 0 0;font-size:9px;line-height:1.35;color:#947f74;text-align:center}
+
+/* Keep keyed customer DOM alive so state transitions can actually animate. */
+.customer{transform-origin:50% 100%;will-change:transform,opacity}.customer-img{animation:customerIdle 1.8s ease-in-out infinite;transform-origin:50% 100%}.customer.state-waiting{animation:customerEnter .32s cubic-bezier(.2,.8,.3,1) both}.customer.state-buying .customer-img{animation:customerBuy .30s ease both}.customer.state-failed .customer-img{animation:customerFail .34s ease both;filter:saturate(.72)}.customer.state-leaving{animation:customerLeave .23s ease-in both}.customer-reaction{position:absolute;z-index:6;left:50%;top:18px;transform:translateX(31px);min-width:22px;min-height:22px;font-size:18px;line-height:1;color:#ee6c8d;text-shadow:0 1px #fff;pointer-events:none}.customer.state-failed .customer-reaction{color:#8d756c}.customer.state-buying .request-bubble{animation:bubbleHappy .28s ease both}.customer-impatient.state-waiting .customer-img{animation:customerIdleFast .68s ease-in-out infinite alternate}.impatient-cue{animation:impatientWiggle .55s ease-in-out infinite alternate}
+@keyframes customerEnter{0%{opacity:0;transform:translateY(20px) scale(.92)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes customerIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes customerIdleFast{from{transform:translateX(-1px)}to{transform:translateX(1px)}}
+@keyframes customerBuy{0%{transform:scale(1)}48%{transform:translateY(-5px) scale(1.06)}100%{transform:scale(1)}}
+@keyframes customerFail{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px) rotate(-2deg)}70%{transform:translateX(4px) rotate(2deg)}}
+@keyframes customerLeave{to{opacity:0;transform:translateX(30px) translateY(4px) scale(.94)}}
+@keyframes bubbleHappy{50%{transform:translateX(-50%) scale(1.12)}}
+@keyframes impatientWiggle{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+
+/* Rack feedback: stock changes stay readable instead of adding more UI text. */
+.rack-wrap.rack-restock .rack-img{animation:rackRestock .48s ease}.rack-wrap.rack-restock .rack-stock{animation:stockRestock .48s ease}.rack-wrap.rack-sale .rack-stock{animation:stockSale .38s ease}.rack-wrap.rack-sale .rack-img{animation:rackSale .32s ease}
+@keyframes rackRestock{35%{transform:translateY(-3px) scale(1.015)}70%{transform:translateY(1px)}}
+@keyframes stockRestock{30%{transform:scale(1.08)}70%{transform:scale(.99)}}
+@keyframes stockSale{35%{transform:scale(.92);opacity:.72}100%{transform:scale(1);opacity:1}}
+@keyframes rackSale{45%{transform:translateY(1px)}}
+.cashier.cashier-happy{animation:cashierHappy .42s ease!important}@keyframes cashierHappy{0%,100%{transform:translateX(-50%)}45%{transform:translateX(-50%) translateY(-6px) scale(1.04)}}
+
+/* Tiny celebration: generated symbols, no heavy canvas/sprite dependency. */
+.confetti-fx{position:absolute;z-index:16;left:50%;top:80px;width:1px;height:1px;pointer-events:none}.confetti-fx i{position:absolute;display:none;font-style:normal;font-size:11px;color:#f3b33f}.confetti-fx i:nth-child(3n+1){color:#ef6f91}.confetti-fx i:nth-child(3n+2){color:#5ec69a}.confetti-fx.burst i{display:block;animation:confettiFly .95s cubic-bezier(.2,.72,.2,1) var(--d) both}@keyframes confettiFly{0%{opacity:0;transform:translate(0,0) rotate(0) scale(.6)}14%{opacity:1}100%{opacity:0;transform:translate(var(--x),105px) rotate(var(--r)) scale(1)}}
+
+/* Slight tactile polish for all secondary controls without changing the layout. */
+.buy-btn,.next-day-btn,.choose-upgrade,.reward-card,.circle-btn,.tutorial-progress button{transition:transform .08s ease,filter .14s ease}.buy-btn:active:not(:disabled),.next-day-btn:active,.choose-upgrade:active,.reward-card:active:not(:disabled),.circle-btn:active,.tutorial-progress button:active{transform:translateY(1px) scale(.98)}
+.progress-fill{position:relative;overflow:hidden}.progress-fill:after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 20%,rgba(255,255,255,.35) 48%,transparent 72%);transform:translateX(-120%)}.progress-fill[style*="width"]:after{animation:progressSheen 2.4s ease-in-out infinite}@keyframes progressSheen{0%,45%{transform:translateX(-120%)}72%,100%{transform:translateX(120%)}}
+
+@media (max-width:360px){.settings-btn{flex-basis:28px;width:28px;height:28px}.settings-card{width:calc(100% - 26px)}}
+@media (prefers-reduced-motion:reduce){.customer,.customer-img,.impatient-cue,.rack-wrap .rack-img,.rack-wrap .rack-stock,.cashier,.confetti-fx i,.progress-fill:after{animation:none!important;transition:none!important}.confetti-fx{display:none!important}}

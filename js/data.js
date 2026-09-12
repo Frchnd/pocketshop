@@ -1,5 +1,5 @@
 window.PS_DATA = Object.freeze({
-  version: 6,
+  version: 7,
   baseMaxStock: 6,
   maxStock: 6,
   items: {

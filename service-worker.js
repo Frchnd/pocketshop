@@ -1,7 +1,7 @@
-const CACHE='pocket-shop-m2-v6';
+const CACHE='pocket-shop-m3-v7';
 const CORE=[
   './','./index.html','./manifest.webmanifest','./css/style.css',
-  './js/data.js','./js/save.js','./js/game.js','./js/ui.js','./js/app.js',
+  './js/data.js','./js/save.js','./js/game.js','./js/audio.js','./js/ui.js','./js/app.js',
   './icons/icon-192.png','./icons/icon-512.png',
   './assets/shop/shop-background.png','./assets/shop/awning.png','./assets/shop/shop-sign.png','./assets/shop/counter.png','./assets/shop/register.png','./assets/shop/shop-cat.png',
   './assets/racks/rack-bakery.png','./assets/racks/rack-snacks.png','./assets/racks/rack-drinks.png',

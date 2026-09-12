@@ -1,63 +1,91 @@
-# Pocket Shop M2 — QA Report
+# Pocket Shop M3 — QA Report
 
-Build: M2 Events & Balance
+Build: **M3 Visual & Feel**
 
 ## Result
 
 **PASS — deploy package approved after automated checks.**
 
+The build was not approved merely because files existed or JavaScript parsed. Game modules were executed, progression/event regressions were checked, the new UI state renderer was exercised with a DOM test double, the Web Audio module was executed against an AudioContext test double, and all service-worker core resources were served over local HTTP.
+
 ## Checks executed
 
-### JavaScript / package integrity
-- `node --check` passes for app.js, data.js, save.js, game.js, ui.js, service-worker.js.
-- manifest JSON parses successfully.
-- all local file references used by HTML/data/service-worker resolve.
-- all UI IDs referenced by `ui.js` exist in `index.html`.
-- all service-worker CORE resources return HTTP 200 from a local static server.
-- PWA icons are exactly 192×192 and 512×512.
-- manifest standalone/orientation/start_url/scope fields validated.
+### 1. Game logic & save regression — 37 assertions
 
-### M2 game-logic assertions
-26 assertions passed, covering:
-- base load, restock, shop open, customer spawn;
-- Day 3 Snack Rush trigger;
-- Snack Rush demand/price lifecycle;
-- Restock pausing event timer;
-- event timer resume;
-- modifier reset after event;
-- Busy Hour spawn acceleration and no modifier leak;
-- Hot Day weighted demand uplift;
-- Day 5 Morning Rush immediate start;
-- Morning Rush Coffee +20% sell reward;
-- Morning Rush Coffee demand uplift;
-- summary/reward/upgrade regression;
-- M1-D v4 → M2 v5 save migration;
-- zero-stock items remain requestable with reduced weight.
+Passed checks include:
+- fresh Day 1 state and starting inventory/coins;
+- exact Bread restock quantity/cost;
+- PREP -> RUNNING transition;
+- customer spawn and automatic sale;
+- revenue, stock and coin mutation;
+- persistent Music/SFX defaults and settings mutation;
+- M2 v5 -> M3 v6 save migration;
+- migration preserves day, coins and upgrades;
+- settings are injected safely for older saves;
+- running-day saves resume at PREP;
+- runtime customers/events are not persisted;
+- Day 3 Snack Rush planning, trigger, price effect, expiry and reset;
+- Day 5 Morning Rush immediate trigger and Coffee reward modifier;
+- successful reward -> upgrade flow;
+- Rack+ upgrade advances progression and capacity;
+- audio settings survive day transitions.
 
-### M1 regression assertions
-25 assertions passed, covering:
-- Day 1/2 no event regression;
-- Impatient customer +2 early-service bonus;
-- Bulk customer x2 stock consumption;
-- failed-day +30 consolation;
-- failure → upgrade flow;
-- successful Day 1→5 progression;
-- reward and upgrade transitions;
-- Juice unlock on Day 3;
-- Coffee unlock on Day 5.
+### 2. UI state smoke test — 10 assertions
 
-### UI render smoke test
-5 UI assertions passed with a DOM test double:
-- active-event badge renders;
-- event name renders;
-- event countdown renders;
-- full event banner renders at event start;
-- badge hides after event ends.
+Passed checks include:
+- M3 UI module loads with required DOM references;
+- customer node creation;
+- stable keyed customer ID;
+- event badge rendering;
+- customer arrival/event sound hooks;
+- the same customer DOM node survives a WAITING -> BUYING update;
+- customer state CSS class updates correctly;
+- sale / target sound hooks fire;
+- target confetti is generated;
+- rack sale visual feedback is triggered.
 
-## Total
+### 3. Audio runtime smoke — 5 assertions
 
-69 automated assertions/checks passed across syntax, package integrity, game logic, progression regression, event systems, save migration, UI render smoke, and PWA resource validation.
+The Web Audio module was executed with a browser API test double and passed:
+- module initialization;
+- one background-music scheduler;
+- multiple SFX calls without runtime exceptions;
+- disabled Music/SFX mode without runtime exceptions;
+- clean audio disposal.
 
-## Environment limitation
+### 4. Package / static validation — 178 checks
 
-A headless Chromium end-to-end navigation test was attempted, but this execution environment blocks Chromium navigation with `ERR_BLOCKED_BY_ADMINISTRATOR`, including localhost/file/data URLs. Therefore browser-driven click E2E could not be executed here. The build was not approved solely on static syntax: actual game-state modules were executed in Node VM tests, UI rendering was smoke-tested, and every service-worker core resource was served and fetched successfully through a local HTTP server.
+Passed checks include:
+- `node --check` for data.js, save.js, game.js, audio.js, ui.js, app.js and service-worker.js;
+- manifest JSON parse;
+- standalone display, portrait orientation, start URL and scope;
+- exact 192x192 and 512x512 PWA icon dimensions;
+- required M3 HTML IDs;
+- every local HTML script/style/image reference resolves;
+- every literal UI `#id` reference resolves to an element in index.html;
+- all data image assets exist;
+- service-worker M3 cache name validated;
+- audio.js is part of the offline core cache;
+- all service-worker core paths exist;
+- CSS brace balance;
+- M3 settings/customer/rack/confetti/cashier animation rules present;
+- expected M3 UI/game feature hooks present;
+- all required M3 SFX definitions present.
+
+### 5. Offline-core local HTTP check — 35 resources
+
+Every item in the service-worker `CORE` list returned HTTP 200 from a local static server, including:
+- index / manifest / CSS;
+- all six JavaScript modules;
+- PWA icons;
+- shop/rack/item/customer/UI art used by the build.
+
+## Automated total before ZIP
+
+**265 assertions/checks passed.**
+
+## Browser-driven E2E limitation
+
+A real headless Chromium run was attempted. Chromium in this execution environment does not complete headless initialization/navigation because its Linux DBus/browser process setup hangs, so click-driven Chromium E2E could not be used here.
+
+This limitation is not hidden: browser E2E is the one check that could not be completed in the container. To compensate, game logic was executed directly, the UI was run against a DOM test double, audio was run against an AudioContext test double, and the complete offline core was served/fetched over local HTTP. The user should still do the final real-device visual/audio check after GitHub Pages deploy, because only the actual phone can verify device-specific browser audio, display scaling and PWA shell behavior.

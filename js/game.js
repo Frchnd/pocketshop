@@ -59,6 +59,7 @@ window.PS_GAME = (() => {
       servedByType:{normal:0,impatient:0,bulk:0},
       rewardClaimed:false,lastReward:null,lastUpgrade:null,
       tutorialComplete:!!saved?.tutorialComplete,
+      settings:window.PS_SAVE.normalizeSettings(saved?.settings||{}),
       activeEvent:null,eventTriggered:false,plannedEventId:null,eventCount:0
     };
   }
@@ -337,6 +338,10 @@ window.PS_GAME = (() => {
     if(state.tutorialComplete)return false;
     state.tutorialComplete=true;window.PS_SAVE.save(state);emit();return true;
   }
+  function setSetting(name,value){
+    if(!['music','sfx'].includes(name))return false;
+    state.settings[name]=!!value;window.PS_SAVE.save(state);emit();return true;
+  }
   function getState(){return state;}
   function getDayConfig(day=state.day){return configForDay(day);}
   function getSellPrice(id){return effectiveSellPrice(id);}
@@ -345,6 +350,6 @@ window.PS_GAME = (() => {
   state=makeStateFromSave();
   return {
     onChange,getState,getDayConfig,getSellPrice,getEventDef,restock,openShop,setPaused,tick,
-    rewardAvailability,claimReward,continueAfterFailure,availableUpgrades,chooseUpgrade,skipUpgradeIfMaxed,clearPendingUnlocks,completeTutorial
+    rewardAvailability,claimReward,continueAfterFailure,availableUpgrades,chooseUpgrade,skipUpgradeIfMaxed,clearPendingUnlocks,completeTutorial,setSetting
   };
 })();

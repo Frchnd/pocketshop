@@ -1,7 +1,7 @@
 {
   "name": "Pocket Shop",
   "short_name": "Pocket Shop",
-  "description": "Pocket Shop \u2014 a cozy pastel shop management PWA with limited-time events.",
+  "description": "Pocket Shop \u2014 a cozy pastel shop management PWA with lively animation, audio, and offline play.",
   "id": "./",
   "start_url": "./",
   "scope": "./",

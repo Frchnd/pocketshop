@@ -23,7 +23,7 @@
         <div class="progress-row">
           <img class="sun-icon" src="./assets/icons/icon-sun.png" alt="" />
           <div class="progress-track" aria-label="Daily revenue progress"><div id="progressFill" class="progress-fill"></div></div>
-          <strong id="progressText">0 / 100</strong><img class="gift-icon" src="./assets/icons/icon-gift.png" alt="" />
+          <strong id="progressText">0 / 100</strong><img class="gift-icon" src="./assets/icons/icon-gift.png" alt="" /><button id="settingsBtn" class="settings-btn" type="button" aria-label="Settings">⚙</button>
         </div>
       </header>
 
@@ -38,7 +38,7 @@
         </div>
         <img class="counter" src="./assets/shop/counter.png" alt="" /><img class="register" src="./assets/shop/register.png" alt="" />
         <img class="cashier" src="./assets/customers/cashier.png" alt="Shop cashier" /><img class="shop-cat" src="./assets/shop/shop-cat.png" alt="" />
-        <div id="boostBadge" class="boost-badge" hidden>☀ +10%</div><div id="coinFx" class="coin-fx" aria-hidden="true"></div>
+        <div id="boostBadge" class="boost-badge" hidden>☀ +10%</div><div id="coinFx" class="coin-fx" aria-hidden="true"></div><div id="confettiFx" class="confetti-fx" aria-hidden="true"></div>
       </section>
 
       <section class="customer-lane" aria-label="Customer queue"><div id="customerGrid" class="customer-grid"></div><div id="laneHint" class="lane-hint">Restock your shelves, then open the shop.</div></section>
@@ -64,6 +64,16 @@
         <div class="tutorial-progress"><span id="tutorialStepLabel">1 / 4</span><button id="tutorialSkipBtn" type="button">Skip</button></div>
         <strong id="tutorialTitle">Stock your shelves.</strong><p id="tutorialText">Tap Restock to begin.</p>
       </aside>
+
+
+      <div id="settingsOverlay" class="overlay settings-overlay" hidden>
+        <section class="settings-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+          <header class="settings-head"><div><small>POCKET SHOP</small><h2 id="settingsTitle">Settings</h2></div><button id="closeSettingsBtn" class="circle-btn" type="button" aria-label="Close settings">×</button></header>
+          <div class="setting-row"><div><strong>Music</strong><small>Cozy background melody</small></div><button id="musicToggle" class="toggle-btn" type="button" role="switch" aria-checked="true"><span></span></button></div>
+          <div class="setting-row"><div><strong>Sound FX</strong><small>Taps, sales, events & rewards</small></div><button id="sfxToggle" class="toggle-btn" type="button" role="switch" aria-checked="true"><span></span></button></div>
+          <p class="settings-note">Audio starts after your first tap, as required by mobile browsers.</p>
+        </section>
+      </div>
 
       <div id="restockOverlay" class="overlay" hidden>
         <section class="bottom-sheet" role="dialog" aria-modal="true" aria-labelledby="restockTitle">
@@ -107,9 +117,9 @@
       </div>
     </section>
 
-    <footer class="tiny-footer">Small Shop • Big Happiness • M2</footer>
+    <footer class="tiny-footer">Small Shop • Big Happiness • M3</footer>
   </main>
 
-  <script src="./js/data.js" defer></script><script src="./js/save.js" defer></script><script src="./js/game.js" defer></script><script src="./js/ui.js" defer></script><script src="./js/app.js" defer></script>
+  <script src="./js/data.js" defer></script><script src="./js/save.js" defer></script><script src="./js/game.js" defer></script><script src="./js/audio.js" defer></script><script src="./js/ui.js" defer></script><script src="./js/app.js" defer></script>
 </body>
 </html>
