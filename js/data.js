@@ -1,5 +1,5 @@
 window.PS_DATA = Object.freeze({
-  version: 5,
+  version: 6,
   baseMaxStock: 6,
   maxStock: 6,
   items: {
@@ -26,8 +26,8 @@ window.PS_DATA = Object.freeze({
     },
     bulk: {
       id:'bulk', name:'Bulk', avatar:2,
-      // Source says Bulk is more patient but does not define an exact duration.
-      // 14 sec remains provisional balancing until M2.
+      // Master spec says Bulk is more patient but gives no exact baseline.
+      // M2 keeps the prior provisional 14-second value for consistency.
       patience:14, quantity:2, badge:'👜', cue:'Bulk', bonusThreshold:null, bonusCoins:0
     }
   },
@@ -48,12 +48,44 @@ window.PS_DATA = Object.freeze({
   },
 
   rewards: {
-    // The source specifies CASH = +60..+120 according to progression but does
-    // not define exact per-day values. M1-C uses a linear Day 1–5 ramp.
+    // Source defines +60..+120 across progression but not exact daily values.
+    // M2 keeps the existing Day 1–5 ramp because it is already stable in saves.
     cashByDay: {1:60,2:75,3:90,4:105,5:120},
     freeStockPerItem:2,
     freeStockItemCount:2,
     nextDaySellMultiplier:1.10
+  },
+
+  events: {
+    snackRush: {
+      id:'snackRush', name:'Snack Rush', icon:'🍪', duration:15,
+      banner:'More snack orders!',
+      demandMultipliers:{ snack:2 },
+      sellMultipliers:{ snack:1.2 },
+      spawnDelayMultiplier:1
+    },
+    hotDay: {
+      id:'hotDay', name:'Hot Day', icon:'☀️', duration:20,
+      banner:'More cold drink orders!',
+      demandMultipliers:{ juice:1.8, milk:1.4 },
+      sellMultipliers:{},
+      spawnDelayMultiplier:1
+    },
+    busyHour: {
+      id:'busyHour', name:'Busy Hour', icon:'🕒', duration:15,
+      banner:'More customers!',
+      demandMultipliers:{},
+      sellMultipliers:{},
+      spawnDelayMultiplier:.7
+    },
+    morningRush: {
+      id:'morningRush', name:'Morning Rush', icon:'🥐', duration:20,
+      banner:'Coffee rush!',
+      demandMultipliers:{ coffee:2 },
+      sellMultipliers:{ coffee:1.2 },
+      // Day 5 source says spawn +40%; equivalent delay ~= 1/1.4.
+      spawnDelayMultiplier:1/1.4
+    }
   },
 
   startingCoins: 80,
@@ -72,21 +104,31 @@ window.PS_DATA = Object.freeze({
     3: {
       day:3, label:'FIRST RUSH', duration:80, target:240, spawnMin:5, spawnMax:7, maxCustomers:3,
       unlock:['juice'], demand:{ bread:20, snack:25, milk:30, juice:25 },
-      customerTypes:{ normal:70, impatient:20, bulk:10 }
+      customerTypes:{ normal:70, impatient:20, bulk:10 },
+      event:'snackRush',
+      // The source does not define exact event start time. Production pacing rule:
+      // regular events trigger after the first quarter of the day.
+      eventStartFraction:.25
     },
     4: {
       day:4, label:'STRATEGY', duration:90, target:340, spawnMin:4.5, spawnMax:6.5, maxCustomers:3,
-      // The master source does not define a Day 4 demand table.
-      // It intentionally inherits Day 3 until the balancing milestone.
+      // The master source does not define a Day 4 demand table. M2 keeps the
+      // Day 3 baseline, then the selected event provides the variation.
       demandFrom:3,
       customerTypes:{ normal:60, impatient:25, bulk:15 },
       normalPatience:11,
-      impatientPatience:7
+      impatientPatience:7,
+      eventPool:['hotDay','busyHour','snackRush'],
+      eventStartFraction:.25
     },
     5: {
       day:5, label:'FIRST MILESTONE', duration:100, target:470, spawnMin:4, spawnMax:6, maxCustomers:3,
       unlock:['coffee'], demand:{ bread:15, snack:20, milk:25, juice:25, coffee:15 },
-      customerTypes:{ normal:55, impatient:25, bulk:20 }
+      customerTypes:{ normal:55, impatient:25, bulk:20 },
+      event:'morningRush',
+      // Morning Rush is deliberately an opening event; the source calls it the
+      // Day 5 special event but does not specify a separate trigger timestamp.
+      eventStartFraction:0
     }
   }
 });

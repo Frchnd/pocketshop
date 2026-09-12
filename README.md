@@ -1,101 +1,83 @@
-# Pocket Shop — M1-D Tutorial + Progression Polish
+# Pocket Shop — M2 Events & Balance
 
 Deploy-ready static PWA. No npm, backend, database, account, or API key is required.
 
-## What's new from M1-C
+## What's new from M1-D
 
-### First-time tutorial
-A first-time onboarding sequence now follows the master specification's four-step flow:
+### Limited-time events
+- **Day 3 — Snack Rush**: 15 seconds, Snack demand x2, Snack sell price x1.2.
+- **Day 4 — Random event**: one of Snack Rush, Hot Day, or Busy Hour.
+- **Hot Day**: 20 seconds, Juice demand x1.8 and Milk demand x1.4.
+- **Busy Hour**: 15 seconds, spawn delay x0.7.
+- **Day 5 — Morning Rush**: 20 seconds, Coffee demand x2, Coffee sell reward x1.2, and spawn speed +40% (implemented as delay x 1/1.4).
 
-1. **Stock your shelves.** — Restock is highlighted and the player buys one item.
-2. **Open your shop.** — Open Shop becomes the focus.
-3. **Customers want this.** — the customer lane and request bubble are explained.
-4. **Earn coins and reach the target.** — the daily progress bar becomes the focus after the first sale.
+Events use a short visual banner, then remain visible as a compact event badge with a countdown. Events never open a modal and never intentionally stop the day.
 
-The tutorial is kept short, can be skipped, and is saved so it does not repeat on later sessions.
+### Event-safe gameplay
+- Restock still pauses the entire simulation, including event timers and customer patience.
+- Event demand, price, and spawn modifiers are read from active game state only.
+- When an event ends, its modifier is removed immediately.
+- Busy Hour re-rolls the pending spawn using normal day timing when it ends so spawn acceleration cannot leak beyond the event.
+- Reload during RUNNING still returns safely to PREP; active events are not persisted.
 
-### Progression polish
-- Opening a day now shows a short day banner using the source-defined progression labels:
-  - Day 1 — LEARN
-  - Day 2 — MANAGE
-  - Day 3 — FIRST RUSH
-  - Day 4 — STRATEGY
-  - Day 5 — FIRST MILESTONE
-- Reaching the daily target now triggers a compact `Target Reached!` celebration while the day continues running.
-- PREP lane copy includes the current progression label.
-- The first tutorial customer waits slightly longer before its automatic sale so the request bubble can actually be read. Outside onboarding, automatic sale timing remains within the source-defined 0.7–1.2 second window.
+### Weighted demand / anti-frustration
+The existing source-defined anti-frustration rule remains active: a zero-stock item's demand weight is multiplied by 0.65 instead of being removed completely. Event demand multipliers are applied before that adjustment.
 
-### Save migration
-- Save key is now `pocket-shop-save-v4`.
-- M1-C `v3`, M1-A/M1-B `v2`, and M0 `v1` saves migrate automatically.
-- Existing M1-C players beyond Day 1 are treated as tutorial-complete so onboarding does not interrupt established progression.
-- Day 1 M1-C saves may receive the tutorial once so the new onboarding can still be tested.
+## Source-defined rules vs production pacing decisions
+
+The master specification defines each event's duration and gameplay modifiers, but it does **not** define the exact second when a regular event starts. M2 therefore isolates this as a production pacing rule:
+
+- regular Day 3/4 events start after 25% of the day has elapsed;
+- Morning Rush starts at the beginning of Day 5.
+
+The master specification also does not define a Day 4 base demand table, so Day 4 continues to use the Day 3 base demand table, with its selected event providing the variation.
+
+The prior provisional values remain unchanged:
+- Bulk baseline patience: 14 seconds;
+- Cash reward Day 1–5 ramp: 60 / 75 / 90 / 105 / 120;
+- Free Stock: up to two eligible random items receive +2.
+
+These values are intentionally centralized in `js/data.js` for later balancing.
 
 ## Existing systems retained
 
-- Day 1–5 tuning.
-- Juice unlock Day 3.
-- Coffee unlock Day 5.
-- Normal / Impatient / Bulk customers.
-- Impatient early-service +2 coin bonus.
-- Bulk ×2 request with partial sale if only one unit remains.
-- Reward choice after successful days.
-- +30 consolation coins on failed target.
-- Rack+, Profit+, Patience+ permanent upgrades.
-- Next-day +10% sell boost reward.
-- Restock pauses the simulation.
-- Local save and offline PWA support.
+- Day 1–5 progression and targets.
+- Juice unlock Day 3, Coffee unlock Day 5.
+- Normal / Impatient / Bulk customer types.
+- Impatient +2 early-service bonus.
+- Bulk x2 request and partial fulfillment.
+- Reward choice and failed-day consolation.
+- Rack+, Profit+, Patience+ upgrades.
+- First-time tutorial.
+- Target-reached celebration.
+- Local save migration.
+- Offline service worker / installable PWA.
 
-## Source-defined vs provisional rules still unchanged
+## Save migration
 
-The master specification does not define an exact Day 4 demand table, so Day 4 continues to inherit Day 3 demand until M2 balancing.
+Save key is now `pocket-shop-save-v5`.
 
-Bulk customers are defined as more patient but no exact baseline is provided, so M1-D retains the provisional 14-second Bulk baseline from M1-B/M1-C.
-
-The exact daily Cash reward ramp and number of Free Stock targets also remain the M1-C provisional balancing values until M2.
+M1-D `pocket-shop-save-v4` saves migrate automatically. Older M1 and M0 migration paths are also preserved. Active event state is deliberately not saved.
 
 ## Update an existing GitHub Pages deployment
 
-1. Extract this ZIP.
-2. Replace the existing Pocket Shop repository files with the contents of this folder.
+1. Extract the ZIP.
+2. Replace the existing repository files with the contents of this folder.
 3. Commit to `main`.
 4. Wait for GitHub Pages deployment to finish.
 5. Open the public URL in the phone browser and refresh once.
 6. Fully close the installed Pocket Shop PWA and reopen it.
 
-The service-worker cache is now `pocket-shop-m1d-v5`, so the installed PWA should replace M1-C assets after the new worker activates.
+The service-worker cache is now `pocket-shop-m2-v6`.
 
-## How to test the first-time tutorial again
+## QA
 
-Because tutorial completion is intentionally persistent, an existing progressed save may not show it. For a clean onboarding test, clear Pocket Shop site data in the browser / uninstall the PWA and clear its site storage, then reopen the site. This resets local game progress as well.
-
-## M1-D acceptance checks
-
-- Fresh Day 1 starts with tutorial Step 1 and highlights Restock.
-- Open Shop cannot be used until the first tutorial restock action is completed.
-- A successful restock advances onboarding to Open Shop.
-- Opening the shop advances onboarding to the customer request explanation.
-- First tutorial customer request remains visible long enough to read.
-- First sale advances onboarding to the target/progress explanation.
-- Tutorial completion persists after reload.
-- Skip permanently completes onboarding.
-- Day-start banner uses the correct Day 1–5 progression label.
-- Target Reached celebration fires only once per day when revenue crosses the target.
-- Existing M1-C gameplay systems remain functional.
-- JavaScript syntax, core file references, save migration, and tutorial persistence checks pass.
+See `QA_REPORT.md`. The deploy ZIP is created only after the automated checks in that report pass.
 
 ## Milestone status
 
-**Milestone 1 — FULL GAME LOOP: complete.**
+- M0 Playable Core — complete
+- M1 Full Game Loop — complete
+- **M2 Events & Balance — complete for the Day 1–5 v1 scope**
 
-Next milestone: **M2 — Events & Balance**
-
-Planned M2 systems from the master specification:
-- Snack Rush
-- Hot Day
-- Busy Hour
-- Morning Rush
-- event demand / price / spawn modifiers
-- weighted-demand tuning
-- anti-frustration tuning
-- economy / reward / difficulty balancing
+Next: **M3 — Final Visual & Feel pass** (animation, expressions, feedback, audio, and final art consistency without changing the locked layout).

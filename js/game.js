@@ -10,7 +10,7 @@ window.PS_GAME = (() => {
   const blankUpgrades=()=>({rack:0,profit:0,patience:0});
 
   function configForDay(day){
-    // M1 is authored through Day 5. Day 6+ temporarily reuses Day 5 tuning.
+    // v1 scope is authored through Day 5. Day 6+ intentionally reuses Day 5 tuning.
     return D.days[Math.min(Math.max(1,day),5)];
   }
 
@@ -58,7 +58,8 @@ window.PS_GAME = (() => {
       pendingUnlocks:[],tuningDay:cfg.day,bonusCoinsEarned:0,
       servedByType:{normal:0,impatient:0,bulk:0},
       rewardClaimed:false,lastReward:null,lastUpgrade:null,
-      tutorialComplete:!!saved?.tutorialComplete
+      tutorialComplete:!!saved?.tutorialComplete,
+      activeEvent:null,eventTriggered:false,plannedEventId:null,eventCount:0
     };
   }
 
@@ -82,11 +83,35 @@ window.PS_GAME = (() => {
     return entries[0][0];
   }
 
+  function currentEventDef(){
+    return state.activeEvent ? D.events[state.activeEvent.id] || null : null;
+  }
+
+  function eventDemandMultiplier(itemId){
+    const ev=currentEventDef();
+    return ev?.demandMultipliers?.[itemId] || 1;
+  }
+
+  function eventSellMultiplier(itemId){
+    const ev=currentEventDef();
+    return ev?.sellMultipliers?.[itemId] || 1;
+  }
+
+  function eventSpawnMultiplier(){
+    const ev=currentEventDef();
+    return ev?.spawnDelayMultiplier || 1;
+  }
+
   function weightedItem(){
     const demand=demandForDay(state.day);
     const ids=state.unlockedItems.filter(id=>D.items[id]&&(demand[id]||0)>0);
     let total=0;const weights={};
-    for(const id of ids){const base=demand[id]||0;const adjusted=state.inventory[id]===0?base*.65:base;weights[id]=adjusted;total+=adjusted;}
+    for(const id of ids){
+      const base=(demand[id]||0)*eventDemandMultiplier(id);
+      // Anti-frustration remains source-defined: zero stock lowers demand by 35%, never to zero.
+      const adjusted=state.inventory[id]===0?base*.65:base;
+      weights[id]=adjusted;total+=adjusted;
+    }
     if(total<=0)return state.unlockedItems[0]||'bread';
     let r=Math.random()*total;
     for(const id of ids){r-=weights[id];if(r<=0)return id;}
@@ -112,7 +137,8 @@ window.PS_GAME = (() => {
     const item=D.items[itemId];if(!item)return 0;
     const profitMultiplier=1+(state.upgrades.profit||0)*D.upgrades.profit.effectPerLevel;
     const boostMultiplier=state.nextDayBoost&&state.nextDayBoost.day===day?state.nextDayBoost.multiplier:1;
-    return Math.round(item.sellPrice*profitMultiplier*boostMultiplier);
+    const eventMultiplier=eventSellMultiplier(itemId);
+    return Math.round(item.sellPrice*profitMultiplier*boostMultiplier*eventMultiplier);
   }
 
   function restock(id){
@@ -126,12 +152,56 @@ window.PS_GAME = (() => {
     return {ok:true,qty,cost,item};
   }
 
+  function planEventForDay(){
+    const cfg=configForDay(state.day);
+    if(cfg.event && D.events[cfg.event])return cfg.event;
+    if(Array.isArray(cfg.eventPool)&&cfg.eventPool.length){
+      const valid=cfg.eventPool.filter(id=>D.events[id]);
+      if(valid.length)return valid[Math.floor(Math.random()*valid.length)];
+    }
+    return null;
+  }
+
+  function eventStartElapsed(){
+    const cfg=configForDay(state.day);
+    const fraction=Number.isFinite(+cfg.eventStartFraction)?clamp(+cfg.eventStartFraction,0,1):.25;
+    return state.duration*fraction;
+  }
+
+  function startEvent(id){
+    const def=D.events[id];
+    if(!def||state.activeEvent||state.phase!=='RUNNING')return false;
+    state.activeEvent={id:def.id,name:def.name,icon:def.icon,duration:def.duration,remaining:def.duration,banner:def.banner};
+    state.eventTriggered=true;state.eventCount++;
+    // Spawn-rate events should feel immediate, not only after the next completed spawn cycle.
+    if(def.spawnDelayMultiplier<1)state.spawnIn=Math.max(.15,state.spawnIn*def.spawnDelayMultiplier);
+    emit();return true;
+  }
+
+  function endEvent(){
+    if(!state.activeEvent)return;
+    state.activeEvent=null;
+    // Re-roll the pending spawn at normal day pacing to prevent modifier leakage.
+    if(state.phase==='RUNNING'){
+      const cfg=configForDay(state.day);
+      state.spawnIn=random(cfg.spawnMin,cfg.spawnMax);
+    }
+    emit();
+  }
+
+  function maybeTriggerEvent(){
+    if(state.eventTriggered||!state.plannedEventId||state.phase!=='RUNNING')return;
+    const elapsed=state.duration-state.timeRemaining;
+    if(elapsed>=eventStartElapsed())startEvent(state.plannedEventId);
+  }
+
   function openShop(){
     if(state.phase!=='PREP')return false;
     refreshDayConfig();state.phase='RUNNING';state.spawnIn=1;state.customers=[];
     state.revenue=0;state.served=0;state.lost=0;state.sold=blankSold();
     state.bonusCoinsEarned=0;state.servedByType={normal:0,impatient:0,bulk:0};
     state.rewardClaimed=false;state.lastReward=null;state.lastUpgrade=null;
+    state.activeEvent=null;state.eventTriggered=false;state.plannedEventId=planEventForDay();state.eventCount=0;
     emit();return true;
   }
 
@@ -145,7 +215,7 @@ window.PS_GAME = (() => {
       patience,maxPatience:patience,age:0,state:'WAITING',avatar:typeData.avatar||0,processed:false,saleQuantity:0,bonusCoins:0,
       serviceDelay:(!state.tutorialComplete&&state.day===1)?2.2:random(.7,1.2)
     });
-    state.spawnIn=random(cfg.spawnMin,cfg.spawnMax);
+    state.spawnIn=random(cfg.spawnMin,cfg.spawnMax)*eventSpawnMultiplier();
   }
 
   function processSale(c){
@@ -167,7 +237,14 @@ window.PS_GAME = (() => {
 
   function tick(dt){
     if(state.phase!=='RUNNING'||state.paused)return;
-    const cfg=configForDay(state.day);dt=clamp(dt,0,.25);state.timeRemaining=Math.max(0,state.timeRemaining-dt);state.spawnIn-=dt;
+    const cfg=configForDay(state.day);dt=clamp(dt,0,.25);
+    state.timeRemaining=Math.max(0,state.timeRemaining-dt);
+    maybeTriggerEvent();
+    if(state.activeEvent){
+      state.activeEvent.remaining=Math.max(0,state.activeEvent.remaining-dt);
+      if(state.activeEvent.remaining<=0)endEvent();
+    }
+    state.spawnIn-=dt;
     if(state.spawnIn<=0){spawnCustomer();if(state.customers.length>=cfg.maxCustomers)state.spawnIn=.6;}
     for(const c of [...state.customers]){
       if(c.state!=='WAITING')continue;c.age+=dt;c.patience=Math.max(0,c.patience-dt);
@@ -178,7 +255,7 @@ window.PS_GAME = (() => {
 
   function endDay(){
     if(state.phase!=='RUNNING')return;
-    state.phase='SUMMARY';state.customers=[];
+    state.phase='SUMMARY';state.customers=[];state.activeEvent=null;
     if(state.revenue<state.target)state.coins+=30;
     // Summary itself is intentionally not persisted. If the app is killed here,
     // it safely returns to PREP from the previous autosave without duplicating a reward.
@@ -193,13 +270,7 @@ window.PS_GAME = (() => {
 
   function rewardAvailability(){
     const nonFull=state.unlockedItems.filter(id=>state.inventory[id]<state.maxStock);
-    return {
-      cash:true,
-      freeStock:nonFull.length>0,
-      boost:true,
-      cashAmount:cashRewardAmount(),
-      freeStockCandidates:nonFull.length
-    };
+    return {cash:true,freeStock:nonFull.length>0,boost:true,cashAmount:cashRewardAmount(),freeStockCandidates:nonFull.length};
   }
 
   function chooseRandomDistinct(list,count){
@@ -243,6 +314,7 @@ window.PS_GAME = (() => {
     if(state.nextDayBoost&&state.nextDayBoost.day<state.day)state.nextDayBoost=null;
     state.phase='PREP';state.revenue=0;state.customers=[];state.served=0;state.lost=0;state.sold=blankSold();state.spawnIn=1.2;state.paused=false;
     state.bonusCoinsEarned=0;state.servedByType={normal:0,impatient:0,bulk:0};state.rewardClaimed=false;
+    state.activeEvent=null;state.eventTriggered=false;state.plannedEventId=null;state.eventCount=0;
   }
 
   function chooseUpgrade(id){
@@ -268,10 +340,11 @@ window.PS_GAME = (() => {
   function getState(){return state;}
   function getDayConfig(day=state.day){return configForDay(day);}
   function getSellPrice(id){return effectiveSellPrice(id);}
+  function getEventDef(id){return D.events[id]||null;}
 
   state=makeStateFromSave();
   return {
-    onChange,getState,getDayConfig,getSellPrice,restock,openShop,setPaused,tick,
+    onChange,getState,getDayConfig,getSellPrice,getEventDef,restock,openShop,setPaused,tick,
     rewardAvailability,claimReward,continueAfterFailure,availableUpgrades,chooseUpgrade,skipUpgradeIfMaxed,clearPendingUnlocks,completeTutorial
   };
 })();

@@ -12,10 +12,13 @@ window.PS_UI = (() => {
     unlockOverlay:$('#unlockOverlay'),unlockIcon:$('#unlockItemIcon'),unlockTitle:$('#unlockTitle'),unlockText:$('#unlockItemText'),
     game:$('#game'),progressRow:document.querySelector('.progress-row'),customerLane:document.querySelector('.customer-lane'),
     dayBanner:$('#dayBanner'),dayBannerEyebrow:$('#dayBannerEyebrow'),dayBannerTitle:$('#dayBannerTitle'),dayBannerTarget:$('#dayBannerTarget'),targetReached:$('#targetReached'),
-    tutorialCoach:$('#tutorialCoach'),tutorialStepLabel:$('#tutorialStepLabel'),tutorialTitle:$('#tutorialTitle'),tutorialText:$('#tutorialText'),tutorialSkip:$('#tutorialSkipBtn')
+    tutorialCoach:$('#tutorialCoach'),tutorialStepLabel:$('#tutorialStepLabel'),tutorialTitle:$('#tutorialTitle'),tutorialText:$('#tutorialText'),tutorialSkip:$('#tutorialSkipBtn'),
+    eventBanner:$('#eventBanner'),eventBannerIcon:$('#eventBannerIcon'),eventBannerTitle:$('#eventBannerTitle'),eventBannerText:$('#eventBannerText'),
+    eventBadge:$('#eventBadge'),eventBadgeIcon:$('#eventBadgeIcon'),eventBadgeName:$('#eventBadgeName'),eventBadgeTime:$('#eventBadgeTime')
   };
   let lastCoins=null,lastRevenue=null,lastBonus=0,toastTimer=null,shownUnlockKey='',upgradeMode='view';
   let tutorialStep=0,tutorialFinishTimer=null,lastPhase=null,lastTargetDay=0,dayBannerTimer=null,targetTimer=null;
+  let lastEventKey='',eventBannerTimer=null;
 
   function stockSprites(id,stock,maxStock){
     const ratio=maxStock?stock/maxStock:0;const count=stock<=0?0:ratio<=.34?2:ratio<=.67?4:6;
@@ -105,6 +108,31 @@ window.PS_UI = (() => {
     clearTimeout(targetTimer);el.targetReached.hidden=false;el.targetReached.classList.remove('show');void el.targetReached.offsetWidth;el.targetReached.classList.add('show');targetTimer=setTimeout(()=>{el.targetReached.classList.remove('show');el.targetReached.hidden=true;},2200);
   }
 
+
+  function eventThemeClass(id){
+    return ['snackRush','hotDay','busyHour','morningRush'].includes(id)?`event-${id}`:'';
+  }
+
+  function showEventBanner(active,day,eventCount){
+    const def=window.PS_GAME.getEventDef(active.id);if(!def)return;
+    clearTimeout(eventBannerTimer);
+    el.eventBanner.className=`event-banner ${eventThemeClass(active.id)}`;
+    el.eventBannerIcon.textContent=def.icon||'✨';el.eventBannerTitle.textContent=def.name;el.eventBannerText.textContent=def.banner||'Special event!';
+    el.eventBanner.hidden=false;el.eventBanner.classList.remove('show');void el.eventBanner.offsetWidth;el.eventBanner.classList.add('show');
+    lastEventKey=`${day}:${active.id}:${eventCount||1}`;
+    eventBannerTimer=setTimeout(()=>{el.eventBanner.classList.remove('show');el.eventBanner.hidden=true;},1750);
+  }
+
+  function renderEvent(s){
+    const active=s.activeEvent;
+    if(!active){el.eventBadge.hidden=true;return;}
+    const def=window.PS_GAME.getEventDef(active.id);if(!def){el.eventBadge.hidden=true;return;}
+    const key=`${s.day}:${active.id}:${s.eventCount||1}`;
+    if(key!==lastEventKey)showEventBanner(active,s.day,s.eventCount);
+    el.eventBadge.className=`event-badge ${eventThemeClass(active.id)}`;
+    el.eventBadgeIcon.textContent=def.icon||'✨';el.eventBadgeName.textContent=def.name;el.eventBadgeTime.textContent=`${Math.max(0,Math.ceil(active.remaining))}s`;el.eventBadge.hidden=false;
+  }
+
   function clearTutorialFocus(){
     for(const node of [el.restock,el.open,el.customerLane,el.progressRow])node?.classList.remove('tutorial-focus','tutorial-focus-lane','tutorial-focus-progress');
     for(const node of document.querySelectorAll('.tutorial-buy-focus'))node.classList.remove('tutorial-buy-focus');
@@ -136,7 +164,7 @@ window.PS_UI = (() => {
     maybeStartTutorial(s);
     el.coins.textContent=Math.floor(s.coins);el.day.textContent=`Day ${s.day}`;el.target.textContent=s.target;
     const pct=Math.min(100,(s.revenue/s.target)*100);el.fill.style.width=`${pct}%`;el.progress.textContent=`${s.revenue} / ${s.target}`;
-    el.bread.innerHTML=stockSprites('bread',s.inventory.bread,s.maxStock);el.snack.innerHTML=stockSprites('snack',s.inventory.snack,s.maxStock);renderDrinks(s);renderCustomers(s);
+    el.bread.innerHTML=stockSprites('bread',s.inventory.bread,s.maxStock);el.snack.innerHTML=stockSprites('snack',s.inventory.snack,s.maxStock);renderDrinks(s);renderCustomers(s);renderEvent(s);
     el.restock.disabled=!['PREP','RUNNING'].includes(s.phase);el.upgrade.disabled=s.phase!=='PREP';el.open.disabled=s.phase!=='PREP';
     if(!s.tutorialComplete&&s.day===1&&tutorialStep){
       el.upgrade.disabled=true;
