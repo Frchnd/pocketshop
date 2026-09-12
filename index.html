@@ -50,6 +50,13 @@
       </nav>
 
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      <div id="dayBanner" class="day-banner" role="status" aria-live="polite" hidden><small id="dayBannerEyebrow">DAY 1</small><strong id="dayBannerTitle">LEARN</strong><span id="dayBannerTarget">Target 100</span></div>
+      <div id="targetReached" class="target-reached" role="status" aria-live="polite" hidden>🎯 Target Reached! <span>✓</span></div>
+
+      <aside id="tutorialCoach" class="tutorial-coach" aria-live="polite" hidden>
+        <div class="tutorial-progress"><span id="tutorialStepLabel">1 / 4</span><button id="tutorialSkipBtn" type="button">Skip</button></div>
+        <strong id="tutorialTitle">Stock your shelves.</strong><p id="tutorialText">Tap Restock to begin.</p>
+      </aside>
 
       <div id="restockOverlay" class="overlay" hidden>
         <section class="bottom-sheet" role="dialog" aria-modal="true" aria-labelledby="restockTitle">
@@ -93,7 +100,7 @@
       </div>
     </section>
 
-    <footer class="tiny-footer">Small Shop • Big Happiness • M1-C</footer>
+    <footer class="tiny-footer">Small Shop • Big Happiness • M1-D</footer>
   </main>
 
   <script src="./js/data.js" defer></script><script src="./js/save.js" defer></script><script src="./js/game.js" defer></script><script src="./js/ui.js" defer></script><script src="./js/app.js" defer></script>

@@ -57,7 +57,8 @@ window.PS_GAME = (() => {
       spawnIn:1.2,paused:false,nextCustomerId:1,transactionLock:false,
       pendingUnlocks:[],tuningDay:cfg.day,bonusCoinsEarned:0,
       servedByType:{normal:0,impatient:0,bulk:0},
-      rewardClaimed:false,lastReward:null,lastUpgrade:null
+      rewardClaimed:false,lastReward:null,lastUpgrade:null,
+      tutorialComplete:!!saved?.tutorialComplete
     };
   }
 
@@ -141,7 +142,8 @@ window.PS_GAME = (() => {
     const type=chooseCustomerType();const typeData=D.customerTypes[type]||D.customerTypes.normal;const patience=patienceFor(type);
     state.customers.push({
       id:state.nextCustomerId++,type,item:weightedItem(),quantity:typeData.quantity||1,
-      patience,maxPatience:patience,age:0,state:'WAITING',avatar:typeData.avatar||0,processed:false,saleQuantity:0,bonusCoins:0
+      patience,maxPatience:patience,age:0,state:'WAITING',avatar:typeData.avatar||0,processed:false,saleQuantity:0,bonusCoins:0,
+      serviceDelay:(!state.tutorialComplete&&state.day===1)?2.2:random(.7,1.2)
     });
     state.spawnIn=random(cfg.spawnMin,cfg.spawnMax);
   }
@@ -169,7 +171,7 @@ window.PS_GAME = (() => {
     if(state.spawnIn<=0){spawnCustomer();if(state.customers.length>=cfg.maxCustomers)state.spawnIn=.6;}
     for(const c of [...state.customers]){
       if(c.state!=='WAITING')continue;c.age+=dt;c.patience=Math.max(0,c.patience-dt);
-      if(c.age>=.8&&state.inventory[c.item]>0)processSale(c);else if(c.patience<=0)failCustomer(c);
+      if(c.age>=(c.serviceDelay||.8)&&state.inventory[c.item]>0)processSale(c);else if(c.patience<=0)failCustomer(c);
     }
     if(state.timeRemaining<=0)endDay();else emit();
   }
@@ -259,6 +261,10 @@ window.PS_GAME = (() => {
   }
 
   function clearPendingUnlocks(){state.pendingUnlocks=[];window.PS_SAVE.save(state);emit();}
+  function completeTutorial(){
+    if(state.tutorialComplete)return false;
+    state.tutorialComplete=true;window.PS_SAVE.save(state);emit();return true;
+  }
   function getState(){return state;}
   function getDayConfig(day=state.day){return configForDay(day);}
   function getSellPrice(id){return effectiveSellPrice(id);}
@@ -266,6 +272,6 @@ window.PS_GAME = (() => {
   state=makeStateFromSave();
   return {
     onChange,getState,getDayConfig,getSellPrice,restock,openShop,setPaused,tick,
-    rewardAvailability,claimReward,continueAfterFailure,availableUpgrades,chooseUpgrade,skipUpgradeIfMaxed,clearPendingUnlocks
+    rewardAvailability,claimReward,continueAfterFailure,availableUpgrades,chooseUpgrade,skipUpgradeIfMaxed,clearPendingUnlocks,completeTutorial
   };
 })();

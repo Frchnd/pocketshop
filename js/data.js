@@ -1,5 +1,5 @@
 window.PS_DATA = Object.freeze({
-  version: 4,
+  version: 5,
   baseMaxStock: 6,
   maxStock: 6,
   items: {
@@ -60,22 +60,22 @@ window.PS_DATA = Object.freeze({
   startingStock: { bread:4, snack:4, milk:3, juice:0, coffee:0 },
   days: {
     1: {
-      day:1, duration:60, target:100, spawnMin:7, spawnMax:9, maxCustomers:2,
+      day:1, label:'LEARN', duration:60, target:100, spawnMin:7, spawnMax:9, maxCustomers:2,
       demand:{ bread:40, snack:35, milk:25 },
       customerTypes:{ normal:100 }
     },
     2: {
-      day:2, duration:70, target:160, spawnMin:6, spawnMax:8, maxCustomers:2,
+      day:2, label:'MANAGE', duration:70, target:160, spawnMin:6, spawnMax:8, maxCustomers:2,
       demand:{ bread:30, snack:35, milk:35 },
       customerTypes:{ normal:85, impatient:15 }
     },
     3: {
-      day:3, duration:80, target:240, spawnMin:5, spawnMax:7, maxCustomers:3,
+      day:3, label:'FIRST RUSH', duration:80, target:240, spawnMin:5, spawnMax:7, maxCustomers:3,
       unlock:['juice'], demand:{ bread:20, snack:25, milk:30, juice:25 },
       customerTypes:{ normal:70, impatient:20, bulk:10 }
     },
     4: {
-      day:4, duration:90, target:340, spawnMin:4.5, spawnMax:6.5, maxCustomers:3,
+      day:4, label:'STRATEGY', duration:90, target:340, spawnMin:4.5, spawnMax:6.5, maxCustomers:3,
       // The master source does not define a Day 4 demand table.
       // It intentionally inherits Day 3 until the balancing milestone.
       demandFrom:3,
@@ -84,7 +84,7 @@ window.PS_DATA = Object.freeze({
       impatientPatience:7
     },
     5: {
-      day:5, duration:100, target:470, spawnMin:4, spawnMax:6, maxCustomers:3,
+      day:5, label:'FIRST MILESTONE', duration:100, target:470, spawnMin:4, spawnMax:6, maxCustomers:3,
       unlock:['coffee'], demand:{ bread:15, snack:20, milk:25, juice:25, coffee:15 },
       customerTypes:{ normal:55, impatient:25, bulk:20 }
     }

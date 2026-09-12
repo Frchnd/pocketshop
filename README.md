@@ -1,89 +1,101 @@
-# Pocket Shop — M1-C Rewards + Upgrades
+# Pocket Shop — M1-D Tutorial + Progression Polish
 
 Deploy-ready static PWA. No npm, backend, database, account, or API key is required.
 
-## What's new from M1-B
+## What's new from M1-C
 
-### Reward system
-If the daily target is reached, the End of Day screen now asks the player to choose exactly one reward:
+### First-time tutorial
+A first-time onboarding sequence now follows the master specification's four-step flow:
 
-- **Cash** — +60 to +120 coins depending on progression.
-- **Free Stock** — gives +2 stock to up to two random unlocked items that are not full.
-- **Next-Day Boost** — +10% sell price on the next day only.
+1. **Stock your shelves.** — Restock is highlighted and the player buys one item.
+2. **Open your shop.** — Open Shop becomes the focus.
+3. **Customers want this.** — the customer lane and request bubble are explained.
+4. **Earn coins and reach the target.** — the daily progress bar becomes the focus after the first sale.
 
-If the target is missed, the existing **+30 consolation coins** remains and no reward choice is shown.
+The tutorial is kept short, can be skipped, and is saved so it does not repeat on later sessions.
 
-### Permanent upgrades
-After every completed day, the player chooses one permanent upgrade:
+### Progression polish
+- Opening a day now shows a short day banner using the source-defined progression labels:
+  - Day 1 — LEARN
+  - Day 2 — MANAGE
+  - Day 3 — FIRST RUSH
+  - Day 4 — STRATEGY
+  - Day 5 — FIRST MILESTONE
+- Reaching the daily target now triggers a compact `Target Reached!` celebration while the day continues running.
+- PREP lane copy includes the current progression label.
+- The first tutorial customer waits slightly longer before its automatic sale so the request bubble can actually be read. Outside onboarding, automatic sale timing remains within the source-defined 0.7–1.2 second window.
 
-- **Rack+** — +2 max stock per level, max Lv.3.
-- **Profit+** — +8% sell price per level, max Lv.5.
-- **Patience+** — +1.5 seconds customer patience per level, max Lv.5.
+### Save migration
+- Save key is now `pocket-shop-save-v4`.
+- M1-C `v3`, M1-A/M1-B `v2`, and M0 `v1` saves migrate automatically.
+- Existing M1-C players beyond Day 1 are treated as tutorial-complete so onboarding does not interrupt established progression.
+- Day 1 M1-C saves may receive the tutorial once so the new onboarding can still be tested.
 
-Maxed upgrades can no longer be chosen. The bottom **Upgrade** button is now active during PREP and shows current levels without letting the player buy an upgrade outside the end-of-day progression flow.
-
-### Economy integration
-- Profit+ affects actual sell prices and therefore daily revenue/target progress.
-- Next-Day Boost stacks multiplicatively with Profit+ and expires after its one applicable day.
-- Patience+ affects all customer types, including Day 4's shorter Normal/Impatient baseline.
-- Rack+ immediately changes restock capacity and stock UI limits.
-
-### Save migration / anti-duplication
-- M1-A/M1-B `v2` saves migrate automatically into the new `v3` save.
-- Upgrades and next-day boost are persistent.
-- Claiming a reward saves an `UPGRADE` progression marker. If the app is killed after claiming a reward, it resumes at the upgrade choice instead of letting the reward be claimed twice.
-- Choosing an upgrade prepares and saves the next day before the visible `Next Day` button is dismissed, preventing duplicate upgrade/reward exploits.
-
-## Source-defined vs provisional rules
-
-The master source defines **Cash** as `+60..+120 according to progression`, but does not define an exact day-by-day table. M1-C uses a simple linear Day 1–5 ramp:
-
-- Day 1: +60
-- Day 2: +75
-- Day 3: +90
-- Day 4: +105
-- Day 5+: +120
-
-The source says **Free Stock = +2 for several random items** but does not define how many items. M1-C uses **up to two distinct unlocked non-full items**. Both values are isolated in `js/data.js` for later M2 balancing.
-
-The source also leaves exact upgrade cadence slightly broad (`after certain days/summary`). M1-C follows the supplied progression flow `Day Complete → Get Reward → Choose Upgrade → Next Day`, so one free permanent upgrade choice is offered after each completed day.
-
-## Existing M1-A / M1-B systems retained
+## Existing systems retained
 
 - Day 1–5 tuning.
 - Juice unlock Day 3.
 - Coffee unlock Day 5.
 - Normal / Impatient / Bulk customers.
 - Impatient early-service +2 coin bonus.
-- Bulk ×2 order with partial sale when only one item remains.
-- Restock pauses simulation.
-- Day 4 item demand still inherits Day 3 because the master source does not provide a Day 4 demand table.
-- Bulk baseline patience remains provisional at 14 seconds because the source only says it is more patient.
+- Bulk ×2 request with partial sale if only one unit remains.
+- Reward choice after successful days.
+- +30 consolation coins on failed target.
+- Rack+, Profit+, Patience+ permanent upgrades.
+- Next-day +10% sell boost reward.
+- Restock pauses the simulation.
+- Local save and offline PWA support.
 
-## Update existing GitHub Pages deployment
+## Source-defined vs provisional rules still unchanged
+
+The master specification does not define an exact Day 4 demand table, so Day 4 continues to inherit Day 3 demand until M2 balancing.
+
+Bulk customers are defined as more patient but no exact baseline is provided, so M1-D retains the provisional 14-second Bulk baseline from M1-B/M1-C.
+
+The exact daily Cash reward ramp and number of Free Stock targets also remain the M1-C provisional balancing values until M2.
+
+## Update an existing GitHub Pages deployment
 
 1. Extract this ZIP.
-2. Replace the files in the existing Pocket Shop repository with the contents of this folder.
+2. Replace the existing Pocket Shop repository files with the contents of this folder.
 3. Commit to `main`.
-4. Wait for GitHub Pages to finish deploying.
+4. Wait for GitHub Pages deployment to finish.
 5. Open the public URL in the phone browser and refresh once.
 6. Fully close the installed Pocket Shop PWA and reopen it.
 
-The service-worker cache is now `pocket-shop-m1c-v4`, so the installed PWA should replace M1-B assets after the new worker activates.
+The service-worker cache is now `pocket-shop-m1d-v5`, so the installed PWA should replace M1-C assets after the new worker activates.
 
-## M1-C acceptance checks
+## How to test the first-time tutorial again
 
-- Success day shows exactly three reward choices.
-- Failure day shows +30 consolation and no reward cards.
-- Cash reward adds the correct progression amount once.
-- Free Stock never exceeds current Rack+ capacity.
-- Next-Day Boost changes sell prices only on the next day.
-- Rack+ raises max stock by 2 per level.
-- Profit+ raises sale price by 8% per level with integer rounding.
-- Patience+ adds 1.5 seconds per level.
-- Maxed upgrades cannot be selected.
-- Upgrade levels survive reload.
-- Reward cannot be duplicated by reloading after it was claimed.
-- Old M1-B save migrates without losing day, coins, stock or unlocks.
+Because tutorial completion is intentionally persistent, an existing progressed save may not show it. For a clean onboarding test, clear Pocket Shop site data in the browser / uninstall the PWA and clear its site storage, then reopen the site. This resets local game progress as well.
 
-Next milestone: **M1-D — first-time tutorial + progression polish**, then M2 Events & Balance.
+## M1-D acceptance checks
+
+- Fresh Day 1 starts with tutorial Step 1 and highlights Restock.
+- Open Shop cannot be used until the first tutorial restock action is completed.
+- A successful restock advances onboarding to Open Shop.
+- Opening the shop advances onboarding to the customer request explanation.
+- First tutorial customer request remains visible long enough to read.
+- First sale advances onboarding to the target/progress explanation.
+- Tutorial completion persists after reload.
+- Skip permanently completes onboarding.
+- Day-start banner uses the correct Day 1–5 progression label.
+- Target Reached celebration fires only once per day when revenue crosses the target.
+- Existing M1-C gameplay systems remain functional.
+- JavaScript syntax, core file references, save migration, and tutorial persistence checks pass.
+
+## Milestone status
+
+**Milestone 1 — FULL GAME LOOP: complete.**
+
+Next milestone: **M2 — Events & Balance**
+
+Planned M2 systems from the master specification:
+- Snack Rush
+- Hot Day
+- Busy Hour
+- Morning Rush
+- event demand / price / spawn modifiers
+- weighted-demand tuning
+- anti-frustration tuning
+- economy / reward / difficulty balancing
