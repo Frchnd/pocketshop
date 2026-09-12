@@ -1,19 +1,19 @@
 window.PS_DATA = Object.freeze({
-  version: 7,
+  version: 8,
   baseMaxStock: 6,
   maxStock: 6,
   items: {
-    bread:  { id:'bread',  name:'Bread',  icon:'./assets/items/item-bread.png',  buyPrice:6,  sellPrice:10, unlockDay:1 },
-    snack:  { id:'snack',  name:'Snack',  icon:'./assets/items/item-snack.png',  buyPrice:7,  sellPrice:12, unlockDay:1 },
-    milk:   { id:'milk',   name:'Milk',   icon:'./assets/items/item-milk.png',   buyPrice:9,  sellPrice:15, unlockDay:1 },
-    juice:  { id:'juice',  name:'Juice',  icon:'./assets/items/item-juice.png',  buyPrice:10, sellPrice:17, unlockDay:3 },
-    coffee: { id:'coffee', name:'Coffee', icon:'./assets/items/item-coffee.png', buyPrice:12, sellPrice:21, unlockDay:5 }
+    bread:  { id:'bread',  name:'Bread',  icon:'./assets/items/item-bread.webp',  buyPrice:6,  sellPrice:10, unlockDay:1 },
+    snack:  { id:'snack',  name:'Snack',  icon:'./assets/items/item-snack.webp',  buyPrice:7,  sellPrice:12, unlockDay:1 },
+    milk:   { id:'milk',   name:'Milk',   icon:'./assets/items/item-milk.webp',   buyPrice:9,  sellPrice:15, unlockDay:1 },
+    juice:  { id:'juice',  name:'Juice',  icon:'./assets/items/item-juice.webp',  buyPrice:10, sellPrice:17, unlockDay:3 },
+    coffee: { id:'coffee', name:'Coffee', icon:'./assets/items/item-coffee.webp', buyPrice:12, sellPrice:21, unlockDay:5 }
   },
 
   customerAvatars: [
-    './assets/customers/customer-normal-01.png',
-    './assets/customers/customer-normal-02.png',
-    './assets/customers/customer-normal-03.png'
+    './assets/customers/customer-normal-01.webp',
+    './assets/customers/customer-normal-02.webp',
+    './assets/customers/customer-normal-03.webp'
   ],
   customerTypes: {
     normal: {

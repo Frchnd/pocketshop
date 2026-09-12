@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#FFF9EE" />
   <meta name="description" content="Pocket Shop — a cozy pastel shop management PWA." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Pocket Shop" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icons/icon-192.png" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
@@ -14,30 +17,34 @@
 <body>
   <main class="app-shell">
     <section id="game" class="game" aria-label="Pocket Shop game">
+      <div id="startupLoading" class="startup-loading" role="status" aria-live="polite">
+        <img src="./icons/icon-192.png" alt="" />
+        <strong>Pocket Shop</strong><span>Loading your shop…</span>
+      </div>
       <header class="hud">
         <div class="hud-row">
-          <div class="hud-card coin-card"><img src="./assets/icons/icon-coin.png" alt="" /><strong id="coins">80</strong></div>
-          <div class="hud-card day-card"><img src="./assets/icons/icon-calendar.png" alt="" /><strong id="dayLabel">Day 1</strong></div>
-          <div class="hud-card target-card"><img src="./assets/icons/icon-target.png" alt="" /><span><small>Target</small><strong id="targetLabel">100</strong></span></div>
+          <div class="hud-card coin-card"><img src="./assets/icons/icon-coin.webp" alt="" /><strong id="coins">80</strong></div>
+          <div class="hud-card day-card"><img src="./assets/icons/icon-calendar.webp" alt="" /><strong id="dayLabel">Day 1</strong></div>
+          <div class="hud-card target-card"><img src="./assets/icons/icon-target.webp" alt="" /><span><small>Target</small><strong id="targetLabel">100</strong></span></div>
         </div>
         <div class="progress-row">
-          <img class="sun-icon" src="./assets/icons/icon-sun.png" alt="" />
+          <img class="sun-icon" src="./assets/icons/icon-sun.webp" alt="" />
           <div class="progress-track" aria-label="Daily revenue progress"><div id="progressFill" class="progress-fill"></div></div>
-          <strong id="progressText">0 / 100</strong><img class="gift-icon" src="./assets/icons/icon-gift.png" alt="" /><button id="settingsBtn" class="settings-btn" type="button" aria-label="Settings">⚙</button>
+          <strong id="progressText">0 / 100</strong><img class="gift-icon" src="./assets/icons/icon-gift.webp" alt="" /><button id="settingsBtn" class="settings-btn" type="button" aria-label="Settings">⚙</button>
         </div>
       </header>
 
       <section class="shop-scene" aria-label="Shop floor">
-        <img class="scene-bg" src="./assets/shop/shop-background.png" alt="" />
-        <img class="awning" src="./assets/shop/awning.png" alt="" />
-        <img class="shop-sign" src="./assets/shop/shop-sign.png" alt="Pocket Shop" />
+        <img class="scene-bg" src="./assets/shop/shop-background.webp" alt="" />
+        <img class="awning" src="./assets/shop/awning.webp" alt="" />
+        <img class="shop-sign" src="./assets/shop/shop-sign.webp" alt="Pocket Shop" />
         <div class="racks" aria-label="Product racks">
-          <div class="rack-wrap"><img src="./assets/racks/rack-bakery.png" class="rack-img" alt="Bakery rack" /><div id="rackBread" class="rack-stock" aria-label="Bread stock"></div></div>
-          <div class="rack-wrap"><img src="./assets/racks/rack-snacks.png" class="rack-img" alt="Snacks rack" /><div id="rackSnack" class="rack-stock" aria-label="Snack stock"></div></div>
-          <div class="rack-wrap"><img src="./assets/racks/rack-drinks.png" class="rack-img" alt="Drinks rack" /><div id="rackDrinks" class="rack-stock drinks-stock" aria-label="Drink stock"></div></div>
+          <div class="rack-wrap"><img src="./assets/racks/rack-bakery.webp" class="rack-img" alt="Bakery rack" /><div id="rackBread" class="rack-stock" aria-label="Bread stock"></div></div>
+          <div class="rack-wrap"><img src="./assets/racks/rack-snacks.webp" class="rack-img" alt="Snacks rack" /><div id="rackSnack" class="rack-stock" aria-label="Snack stock"></div></div>
+          <div class="rack-wrap"><img src="./assets/racks/rack-drinks.webp" class="rack-img" alt="Drinks rack" /><div id="rackDrinks" class="rack-stock drinks-stock" aria-label="Drink stock"></div></div>
         </div>
-        <img class="counter" src="./assets/shop/counter.png" alt="" /><img class="register" src="./assets/shop/register.png" alt="" />
-        <img class="cashier" src="./assets/customers/cashier.png" alt="Shop cashier" /><img class="shop-cat" src="./assets/shop/shop-cat.png" alt="" />
+        <img class="counter" src="./assets/shop/counter.webp" alt="" /><img class="register" src="./assets/shop/register.webp" alt="" />
+        <img class="cashier" src="./assets/customers/cashier.webp" alt="Shop cashier" /><img class="shop-cat" src="./assets/shop/shop-cat.webp" alt="" />
         <div id="boostBadge" class="boost-badge" hidden>☀ +10%</div><div id="coinFx" class="coin-fx" aria-hidden="true"></div><div id="confettiFx" class="confetti-fx" aria-hidden="true"></div>
       </section>
 
@@ -50,6 +57,11 @@
       </nav>
 
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      <div id="connectionBadge" class="connection-badge" role="status" aria-live="polite" hidden>Offline mode</div>
+      <aside id="releaseBanner" class="release-banner" aria-live="polite" hidden>
+        <div><strong>Update ready ✨</strong><span>A new Pocket Shop build is available.</span></div>
+        <button id="updateLaterBtn" type="button">Later</button><button id="updateNowBtn" type="button">Refresh</button>
+      </aside>
       <div id="dayBanner" class="day-banner" role="status" aria-live="polite" hidden><small id="dayBannerEyebrow">DAY 1</small><strong id="dayBannerTitle">LEARN</strong><span id="dayBannerTarget">Target 100</span></div>
       <div id="targetReached" class="target-reached" role="status" aria-live="polite" hidden>🎯 Target Reached! <span>✓</span></div>
       <div id="eventBanner" class="event-banner" role="status" aria-live="polite" hidden>
@@ -71,7 +83,10 @@
           <header class="settings-head"><div><small>POCKET SHOP</small><h2 id="settingsTitle">Settings</h2></div><button id="closeSettingsBtn" class="circle-btn" type="button" aria-label="Close settings">×</button></header>
           <div class="setting-row"><div><strong>Music</strong><small>Cozy background melody</small></div><button id="musicToggle" class="toggle-btn" type="button" role="switch" aria-checked="true"><span></span></button></div>
           <div class="setting-row"><div><strong>Sound FX</strong><small>Taps, sales, events & rewards</small></div><button id="sfxToggle" class="toggle-btn" type="button" role="switch" aria-checked="true"><span></span></button></div>
-          <p class="settings-note">Audio starts after your first tap, as required by mobile browsers.</p>
+          <div id="installRow" class="setting-row release-setting" hidden><div><strong>Install App</strong><small>Add Pocket Shop to your home screen</small></div><button id="installAppBtn" class="small-setting-btn" type="button">Install</button></div>
+          <div class="setting-row release-setting"><div><strong>App Update</strong><small id="updateStatusText">Pocket Shop M4 is ready</small></div><button id="checkUpdateBtn" class="small-setting-btn" type="button">Check</button></div>
+          <div class="setting-row release-setting danger-setting"><div><strong>Reset Progress</strong><small>Deletes local Pocket Shop progress on this device</small></div><button id="resetProgressBtn" class="small-setting-btn danger-btn" type="button">Reset</button></div>
+          <p class="settings-note">Audio starts after your first tap. Progress is saved locally and the game can run offline after the first successful load.</p>
         </section>
       </div>
 
@@ -117,9 +132,9 @@
       </div>
     </section>
 
-    <footer class="tiny-footer">Small Shop • Big Happiness • M3</footer>
+    <footer class="tiny-footer">Small Shop • Big Happiness • M4</footer>
   </main>
 
-  <script src="./js/data.js" defer></script><script src="./js/save.js" defer></script><script src="./js/game.js" defer></script><script src="./js/audio.js" defer></script><script src="./js/ui.js" defer></script><script src="./js/app.js" defer></script>
+  <script src="./js/data.js" defer></script><script src="./js/save.js" defer></script><script src="./js/game.js" defer></script><script src="./js/audio.js" defer></script><script src="./js/ui.js" defer></script><script src="./js/release.js" defer></script><script src="./js/app.js" defer></script>
 </body>
 </html>

@@ -1,91 +1,106 @@
-# Pocket Shop M3 — QA Report
+# Pocket Shop M4 — QA Report
 
-Build: **M3 Visual & Feel**
+Build: **M4 PWA Release Build**
 
 ## Result
 
-**PASS — deploy package approved after automated checks.**
+**PASS — package approved for deploy after automated checks.**
 
-The build was not approved merely because files existed or JavaScript parsed. Game modules were executed, progression/event regressions were checked, the new UI state renderer was exercised with a DOM test double, the Web Audio module was executed against an AudioContext test double, and all service-worker core resources were served over local HTTP.
+The ZIP is not being treated as ready merely because the JavaScript parses. The underlying game/save modules were executed, M3-to-M4 migration and corruption recovery were exercised, PWA release controls were executed against browser API test doubles, all static references were verified, every service-worker core file was fetched over a local HTTP server, and optimized image files were decoded.
 
-## Checks executed
+## Checks completed
 
-### 1. Game logic & save regression — 37 assertions
+### 1. JavaScript syntax — 8 PASS
 
-Passed checks include:
-- fresh Day 1 state and starting inventory/coins;
-- exact Bread restock quantity/cost;
+`node --check` passed for:
+- `js/app.js`
+- `js/audio.js`
+- `js/data.js`
+- `js/game.js`
+- `js/release.js`
+- `js/save.js`
+- `js/ui.js`
+- `service-worker.js`
+
+### 2. Static / PWA package validation — 191 PASS
+
+Checks include:
+- all local HTML scripts, styles and images exist;
+- HTML IDs are unique;
+- literal UI/release `#id` selectors resolve to actual elements;
+- manifest parses and uses standalone + portrait-primary;
+- 192 and 512 `any` icons have exact dimensions;
+- 192 and 512 dedicated `maskable` icons have exact dimensions;
+- all lossless WebP art decodes successfully;
+- all service-worker CORE paths exist;
+- M4 cache version and `SKIP_WAITING` message hook exist;
+- navigation has cached offline fallback;
+- `release.js` is part of the offline core cache;
+- CSS brace balance is valid;
+- M4 startup/update/offline/install UI hooks are present;
+- no removed PNG game-art paths remain referenced;
+- art payload is smaller than M3 by more than 15%.
+
+Measured art payload:
+- M3 assets: **814,051 bytes**
+- M4 assets: **601,612 bytes**
+- reduction: **26.1%**
+
+### 3. Game + save executable regression — 30 PASS
+
+Passed scenarios include:
+- fresh Day 1 / 80 coins / starting inventory;
+- Bread restock exact quantity and cost;
 - PREP -> RUNNING transition;
-- customer spawn and automatic sale;
-- revenue, stock and coin mutation;
-- persistent Music/SFX defaults and settings mutation;
-- M2 v5 -> M3 v6 save migration;
-- migration preserves day, coins and upgrades;
-- settings are injected safely for older saves;
-- running-day saves resume at PREP;
-- runtime customers/events are not persisted;
-- Day 3 Snack Rush planning, trigger, price effect, expiry and reset;
-- Day 5 Morning Rush immediate trigger and Coffee reward modifier;
-- successful reward -> upgrade flow;
-- Rack+ upgrade advances progression and capacity;
-- audio settings survive day transitions.
+- automatic customer sale mutates stock/revenue/coins;
+- M3 save v6 -> M4 save v7 migration;
+- migrated coins/day/upgrades/audio settings preserved;
+- corrupt v7 JSON is backed up and recovery falls back to valid v6 data;
+- RUNNING save normalizes to PREP on reload;
+- Day 3 Snack Rush trigger, price modifier, expiry and modifier reset;
+- Day 5 Morning Rush immediate trigger and Coffee price modifier;
+- reward -> upgrade flow;
+- Rack+ advances day and increases capacity;
+- Music setting persists;
+- Reset removes the current M4 save.
 
-### 2. UI state smoke test — 10 assertions
+### 4. PWA release-manager executable smoke — 13 PASS
 
-Passed checks include:
-- M3 UI module loads with required DOM references;
-- customer node creation;
-- stable keyed customer ID;
-- event badge rendering;
-- customer arrival/event sound hooks;
-- the same customer DOM node survives a WAITING -> BUYING update;
-- customer state CSS class updates correctly;
-- sale / target sound hooks fire;
-- target confetti is generated;
-- rack sale visual feedback is triggered.
+`release.js` was executed with DOM, service-worker and connectivity test doubles. Passed checks include:
+- build identity M4;
+- install event binding;
+- online/offline listeners;
+- update-check button binding;
+- reset button binding;
+- service-worker registration update watcher;
+- controller-change watcher;
+- startup cover dismissal;
+- offline badge + toast behavior;
+- reset two-tap arming state;
+- update-check status flow.
 
-### 3. Audio runtime smoke — 5 assertions
+### 5. Offline core local HTTP — 39 PASS
 
-The Web Audio module was executed with a browser API test double and passed:
-- module initialization;
-- one background-music scheduler;
-- multiple SFX calls without runtime exceptions;
-- disabled Music/SFX mode without runtime exceptions;
-- clean audio disposal.
+Every URL listed in service-worker `CORE` returned HTTP 200 from a local static server, including:
+- document, manifest and CSS;
+- seven JavaScript modules;
+- any + maskable PWA icons;
+- all shop, rack, product, customer and HUD assets required by the game.
 
-### 4. Package / static validation — 178 checks
+## Automated total before ZIP integrity
 
-Passed checks include:
-- `node --check` for data.js, save.js, game.js, audio.js, ui.js, app.js and service-worker.js;
-- manifest JSON parse;
-- standalone display, portrait orientation, start URL and scope;
-- exact 192x192 and 512x512 PWA icon dimensions;
-- required M3 HTML IDs;
-- every local HTML script/style/image reference resolves;
-- every literal UI `#id` reference resolves to an element in index.html;
-- all data image assets exist;
-- service-worker M3 cache name validated;
-- audio.js is part of the offline core cache;
-- all service-worker core paths exist;
-- CSS brace balance;
-- M3 settings/customer/rack/confetti/cashier animation rules present;
-- expected M3 UI/game feature hooks present;
-- all required M3 SFX definitions present.
+**281 checks passed.**
 
-### 5. Offline-core local HTTP check — 35 resources
+## Browser-driven E2E attempt
 
-Every item in the service-worker `CORE` list returned HTTP 200 from a local static server, including:
-- index / manifest / CSS;
-- all six JavaScript modules;
-- PWA icons;
-- shop/rack/item/customer/UI art used by the build.
+A Playwright/Chromium run was attempted against the local server. Chromium launches, but navigation to localhost is blocked by the execution environment with:
 
-## Automated total before ZIP
+`net::ERR_BLOCKED_BY_ADMINISTRATOR`
 
-**265 assertions/checks passed.**
+Therefore this report does **not** claim a real Chromium click-through/offline-navigation test that did not happen. Game behavior was instead executed directly, the PWA release manager was run against browser API test doubles, and the complete service-worker core was fetched over HTTP.
 
-## Browser-driven E2E limitation
+Final phone QA remains necessary for device-specific display scaling, Web Audio unlock behavior, Android install UI, and the standalone PWA shell.
 
-A real headless Chromium run was attempted. Chromium in this execution environment does not complete headless initialization/navigation because its Linux DBus/browser process setup hangs, so click-driven Chromium E2E could not be used here.
+## ZIP integrity
 
-This limitation is not hidden: browser E2E is the one check that could not be completed in the container. To compensate, game logic was executed directly, the UI was run against a DOM test double, audio was run against an AudioContext test double, and the complete offline core was served/fetched over local HTTP. The user should still do the final real-device visual/audio check after GitHub Pages deploy, because only the actual phone can verify device-specific browser audio, display scaling and PWA shell behavior.
+**PASS.** The final deployment archive was tested with `unzip -t`; all archived files passed compressed-data integrity checks.
