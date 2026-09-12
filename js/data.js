@@ -1,5 +1,6 @@
 window.PS_DATA = Object.freeze({
-  version: 3,
+  version: 4,
+  baseMaxStock: 6,
   maxStock: 6,
   items: {
     bread:  { id:'bread',  name:'Bread',  icon:'./assets/items/item-bread.png',  buyPrice:6,  sellPrice:10, unlockDay:1 },
@@ -9,9 +10,6 @@ window.PS_DATA = Object.freeze({
     coffee: { id:'coffee', name:'Coffee', icon:'./assets/items/item-coffee.png', buyPrice:12, sellPrice:21, unlockDay:5 }
   },
 
-  // M1-B uses the existing locked customer art and gives each type a stable
-  // avatar + visual cue. Dedicated animation frames can replace these later
-  // without changing gameplay logic.
   customerAvatars: [
     './assets/customers/customer-normal-01.png',
     './assets/customers/customer-normal-02.png',
@@ -28,10 +26,34 @@ window.PS_DATA = Object.freeze({
     },
     bulk: {
       id:'bulk', name:'Bulk', avatar:2,
-      // The master spec says Bulk is "more patient" but gives no exact value.
-      // 14 seconds is provisional M1-B tuning and is isolated here for balancing.
+      // Source says Bulk is more patient but does not define an exact duration.
+      // 14 sec remains provisional balancing until M2.
       patience:14, quantity:2, badge:'👜', cue:'Bulk', bonusThreshold:null, bonusCoins:0
     }
+  },
+
+  upgrades: {
+    rack: {
+      id:'rack', name:'Rack+', icon:'🗄️', maxLevel:3,
+      shortEffect:'+2 max stock', effectPerLevel:2
+    },
+    profit: {
+      id:'profit', name:'Profit+', icon:'🪙', maxLevel:5,
+      shortEffect:'+8% sell price', effectPerLevel:.08
+    },
+    patience: {
+      id:'patience', name:'Patience+', icon:'⏱️', maxLevel:5,
+      shortEffect:'+1.5 sec patience', effectPerLevel:1.5
+    }
+  },
+
+  rewards: {
+    // The source specifies CASH = +60..+120 according to progression but does
+    // not define exact per-day values. M1-C uses a linear Day 1–5 ramp.
+    cashByDay: {1:60,2:75,3:90,4:105,5:120},
+    freeStockPerItem:2,
+    freeStockItemCount:2,
+    nextDaySellMultiplier:1.10
   },
 
   startingCoins: 80,
@@ -54,8 +76,8 @@ window.PS_DATA = Object.freeze({
     },
     4: {
       day:4, duration:90, target:340, spawnMin:4.5, spawnMax:6.5, maxCustomers:3,
-      // The master specification does not define a Day 4 demand table.
-      // M1-B intentionally inherits Day 3 demand weights until balancing.
+      // The master source does not define a Day 4 demand table.
+      // It intentionally inherits Day 3 until the balancing milestone.
       demandFrom:3,
       customerTypes:{ normal:60, impatient:25, bulk:15 },
       normalPatience:11,

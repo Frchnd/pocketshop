@@ -3,133 +3,120 @@ window.PS_UI = (() => {
   const $=s=>document.querySelector(s);
   const el={
     coins:$('#coins'),day:$('#dayLabel'),target:$('#targetLabel'),fill:$('#progressFill'),progress:$('#progressText'),
-    bread:$('#rackBread'),snack:$('#rackSnack'),drinks:$('#rackDrinks'),grid:$('#customerGrid'),hint:$('#laneHint'),
-    restock:$('#restockBtn'),open:$('#openShopBtn'),openText:$('#openShopText'),toast:$('#toast'),coinFx:$('#coinFx'),
+    bread:$('#rackBread'),snack:$('#rackSnack'),drinks:$('#rackDrinks'),grid:$('#customerGrid'),hint:$('#laneHint'),boost:$('#boostBadge'),
+    restock:$('#restockBtn'),upgrade:$('#upgradeBtn'),open:$('#openShopBtn'),openText:$('#openShopText'),toast:$('#toast'),coinFx:$('#coinFx'),
     restockOverlay:$('#restockOverlay'),restockCards:$('#restockCards'),summaryOverlay:$('#summaryOverlay'),
     summaryResult:$('#summaryResult'),sumRevenue:$('#sumRevenue'),sumServed:$('#sumServed'),sumLost:$('#sumLost'),sumBest:$('#sumBest'),
+    rewardSection:$('#rewardSection'),rewardChoices:$('#rewardChoices'),summaryContinue:$('#summaryContinueBtn'),
+    upgradeOverlay:$('#upgradeOverlay'),upgradeChoices:$('#upgradeChoices'),upgradeTitle:$('#upgradeTitle'),upgradeEyebrow:$('#upgradeEyebrow'),upgradeIntro:$('#upgradeIntro'),upgradeNext:$('#upgradeNextDayBtn'),closeUpgrade:$('#closeUpgradeBtn'),
     unlockOverlay:$('#unlockOverlay'),unlockIcon:$('#unlockItemIcon'),unlockTitle:$('#unlockTitle'),unlockText:$('#unlockItemText')
   };
-  let lastCoins=null,lastRevenue=null,lastBonus=0,toastTimer=null,shownUnlockKey='';
+  let lastCoins=null,lastRevenue=null,lastBonus=0,toastTimer=null,shownUnlockKey='',upgradeMode='view';
 
-  function stockSprites(id,stock){
-    const count=stock<=0?0:stock<=2?2:stock<=4?4:6;
+  function stockSprites(id,stock,maxStock){
+    const ratio=maxStock?stock/maxStock:0;const count=stock<=0?0:ratio<=.34?2:ratio<=.67?4:6;
     return Array.from({length:count},()=>`<img class="stock-sprite" src="${D.items[id].icon}" alt="" />`).join('');
   }
-
-  function drinkRow(id,stock,unlocked){
+  function drinkRow(id,stock,maxStock,unlocked){
     if(!unlocked)return '<div class="drink-row locked-row"></div>';
-    const count=stock<=0?0:stock<=2?1:2;
+    const ratio=maxStock?stock/maxStock:0;const count=stock<=0?0:ratio<=.4?1:2;
     return `<div class="drink-row" data-drink="${id}">${Array.from({length:count},()=>`<img src="${D.items[id].icon}" alt="" />`).join('')}</div>`;
   }
-
-  function renderDrinks(s){
-    el.drinks.innerHTML=[
-      drinkRow('milk',s.inventory.milk,s.unlockedItems.includes('milk')),
-      drinkRow('juice',s.inventory.juice,s.unlockedItems.includes('juice')),
-      drinkRow('coffee',s.inventory.coffee,s.unlockedItems.includes('coffee'))
-    ].join('');
-  }
-
-  function patienceColor(p,max){const r=p/max;return r>.58?'#65cf9d':r>.26?'#f0b849':'#f45f78'}
-  function showToast(text){clearTimeout(toastTimer);el.toast.textContent=text;el.toast.classList.add('show');toastTimer=setTimeout(()=>el.toast.classList.remove('show'),1150)}
-  function coinPop(diff){if(diff<=0)return;el.coinFx.textContent=`+${diff} 🪙`;el.coinFx.classList.remove('pop');void el.coinFx.offsetWidth;el.coinFx.classList.add('pop')}
+  function renderDrinks(s){el.drinks.innerHTML=[drinkRow('milk',s.inventory.milk,s.maxStock,s.unlockedItems.includes('milk')),drinkRow('juice',s.inventory.juice,s.maxStock,s.unlockedItems.includes('juice')),drinkRow('coffee',s.inventory.coffee,s.maxStock,s.unlockedItems.includes('coffee'))].join('');}
+  function patienceColor(p,max){const r=p/max;return r>.58?'#65cf9d':r>.26?'#f0b849':'#f45f78';}
+  function showToast(text){clearTimeout(toastTimer);el.toast.textContent=text;el.toast.classList.add('show');toastTimer=setTimeout(()=>el.toast.classList.remove('show'),1350);}
+  function coinPop(diff){if(diff<=0)return;el.coinFx.textContent=`+${diff} 🪙`;el.coinFx.classList.remove('pop');void el.coinFx.offsetWidth;el.coinFx.classList.add('pop');}
 
   function renderRestock(s){
     const items=s.unlockedItems.map(id=>D.items[id]).filter(Boolean);
-    el.restockCards.innerHTML=items.map(item=>{
-      const room=s.maxStock-s.inventory[item.id];const qty=Math.min(2,room);const cost=qty*item.buyPrice;const dis=qty<=0||s.coins<cost;
-      return `<article class="restock-card"><img src="${item.icon}" alt="${item.name}"><h3>${item.name}</h3><div class="restock-meta">🪙 ${cost}<br>Stock ${s.inventory[item.id]} / ${s.maxStock}</div><button class="buy-btn" type="button" data-buy="${item.id}" ${dis?'disabled':''}>${qty?`Buy +${qty}`:'Full'}</button></article>`;
-    }).join('');
+    el.restockCards.innerHTML=items.map(item=>{const room=s.maxStock-s.inventory[item.id],qty=Math.min(2,room),cost=qty*item.buyPrice,dis=qty<=0||s.coins<cost;return `<article class="restock-card"><img src="${item.icon}" alt="${item.name}"><h3>${item.name}</h3><div class="restock-meta">🪙 ${cost}<br>Stock ${s.inventory[item.id]} / ${s.maxStock}</div><button class="buy-btn" type="button" data-buy="${item.id}" ${dis?'disabled':''}>${qty?`Buy +${qty}`:'Full'}</button></article>`;}).join('');
   }
-
-  function openRestock(){
-    const s=window.PS_GAME.getState();if(!['PREP','RUNNING'].includes(s.phase))return;
-    window.PS_GAME.setPaused(true);renderRestock(window.PS_GAME.getState());el.restockOverlay.hidden=false;setTimeout(()=>$('#closeRestockBtn')?.focus(),0);
-  }
-  function closeRestock(){el.restockOverlay.hidden=true;window.PS_GAME.setPaused(false);el.restock.focus()}
+  function openRestock(){const s=window.PS_GAME.getState();if(!['PREP','RUNNING'].includes(s.phase))return;window.PS_GAME.setPaused(true);renderRestock(window.PS_GAME.getState());el.restockOverlay.hidden=false;setTimeout(()=>$('#closeRestockBtn')?.focus(),0);}
+  function closeRestock(){el.restockOverlay.hidden=true;window.PS_GAME.setPaused(false);el.restock.focus();}
 
   function customerMarkup(c){
-    const item=D.items[c.item];
-    const type=D.customerTypes[c.type]||D.customerTypes.normal;
-    const quantity=(c.quantity||1)>1?`<span class="request-qty">×${c.quantity}</span>`:'';
-    const badge=type.badge?`<span class="customer-type-badge ${c.type}" title="${type.name} customer">${type.badge}</span>`:'';
-    const cue=c.type==='impatient'?'<span class="impatient-cue" aria-hidden="true">〰</span>':'';
-    const basket=c.type==='bulk'?'<span class="bulk-cue" aria-hidden="true">👜</span>':'';
-    return `<article class="customer customer-${c.type}" aria-label="${type.name} customer requesting ${c.quantity||1} ${item.name}">
-      ${badge}${cue}${basket}
-      <div class="request-bubble"><img src="${item.icon}" alt="${item.name}">${quantity}</div>
-      <img class="customer-img" src="${D.customerAvatars[c.avatar]}" alt="${type.name} customer">
-      <div class="patience" aria-label="Patience"><i style="width:${Math.max(0,c.patience/c.maxPatience*100)}%;background:${patienceColor(c.patience,c.maxPatience)}"></i></div>
-    </article>`;
+    const item=D.items[c.item],type=D.customerTypes[c.type]||D.customerTypes.normal;
+    const quantity=(c.quantity||1)>1?`<span class="request-qty">×${c.quantity}</span>`:'',badge=type.badge?`<span class="customer-type-badge ${c.type}" title="${type.name} customer">${type.badge}</span>`:'',cue=c.type==='impatient'?'<span class="impatient-cue" aria-hidden="true">〰</span>':'',basket=c.type==='bulk'?'<span class="bulk-cue" aria-hidden="true">👜</span>':'';
+    return `<article class="customer customer-${c.type}" aria-label="${type.name} customer requesting ${c.quantity||1} ${item.name}">${badge}${cue}${basket}<div class="request-bubble"><img src="${item.icon}" alt="${item.name}">${quantity}</div><img class="customer-img" src="${D.customerAvatars[c.avatar]}" alt="${type.name} customer"><div class="patience" aria-label="Patience"><i style="width:${Math.max(0,c.patience/c.maxPatience*100)}%;background:${patienceColor(c.patience,c.maxPatience)}"></i></div></article>`;
+  }
+  function renderCustomers(s){
+    const max=window.PS_GAME.getDayConfig(s.day).maxCustomers;el.grid.classList.toggle('cols-3',max>=3);
+    if(!s.customers.length){el.grid.innerHTML='';el.hint.hidden=false;const cfg=window.PS_GAME.getDayConfig(s.day);const types=Object.keys(cfg.customerTypes||{}).filter(k=>(cfg.customerTypes[k]||0)>0).map(k=>D.customerTypes[k]?.name).filter(Boolean).join(' • ');el.hint.textContent=s.phase==='RUNNING'?'Customers are on the way…':`Day ${s.day} • ${types||'Normal'} customers`;return;}
+    el.hint.hidden=true;el.grid.innerHTML=s.customers.map(customerMarkup).join('');
   }
 
-  function renderCustomers(s){
-    const max=window.PS_GAME.getDayConfig(s.day).maxCustomers;
-    el.grid.classList.toggle('cols-3',max>=3);
-    if(!s.customers.length){
-      el.grid.innerHTML='';el.hint.hidden=false;
-      const cfg=window.PS_GAME.getDayConfig(s.day);
-      const types=Object.keys(cfg.customerTypes||{}).filter(k=>(cfg.customerTypes[k]||0)>0).map(k=>D.customerTypes[k]?.name).filter(Boolean).join(' • ');
-      el.hint.textContent=s.phase==='RUNNING'?'Customers are on the way…':`Day ${s.day} • ${types || 'Normal'} customers`;
-      return;
-    }
-    el.hint.hidden=true;
-    el.grid.innerHTML=s.customers.map(customerMarkup).join('');
+  function rewardCards(s){
+    const a=window.PS_GAME.rewardAvailability();
+    return [
+      `<button type="button" class="reward-card cash" data-reward="cash"><span>🪙</span><strong>+${a.cashAmount} Coins</strong><small>A little extra for tomorrow!</small></button>`,
+      `<button type="button" class="reward-card stock" data-reward="stock" ${a.freeStock?'':'disabled'}><span>📦</span><strong>Free Stock</strong><small>${a.freeStock?'Up to 2 random items get +2.':'All unlocked stock is full.'}</small></button>`,
+      `<button type="button" class="reward-card boost" data-reward="boost"><span>☀️</span><strong>Next-Day Boost</strong><small>+10% sell price tomorrow.</small></button>`
+    ].join('');
   }
 
   function renderSummary(s){
-    const success=s.revenue>=s.target;
-    const bonus=s.bonusCoinsEarned>0?` • +${s.bonusCoinsEarned} patience bonus`:'';
+    const success=s.revenue>=s.target,bonus=s.bonusCoinsEarned>0?` • +${s.bonusCoinsEarned} patience bonus`:'';
     el.summaryResult.textContent=success?`🎯 Target reached!${bonus}`:`🎯 Target not reached • +30 consolation coins${bonus}`;
     el.sumRevenue.textContent=s.revenue;el.sumServed.textContent=s.served;el.sumLost.textContent=s.lost;
-    const best=Object.keys(s.sold).sort((a,b)=>s.sold[b]-s.sold[a])[0];
-    el.sumBest.textContent=s.sold[best]?`${D.items[best].name} ×${s.sold[best]}`:'—';
-    el.summaryOverlay.hidden=false;
+    const best=Object.keys(s.sold).sort((a,b)=>s.sold[b]-s.sold[a])[0];el.sumBest.textContent=s.sold[best]?`${D.items[best].name} ×${s.sold[best]}`:'—';
+    el.rewardSection.hidden=!success;el.summaryContinue.hidden=success;if(success)el.rewardChoices.innerHTML=rewardCards(s);el.summaryOverlay.hidden=false;
   }
 
+  function upgradeCard(def,s,mode){
+    const level=s.upgrades[def.id]||0,maxed=level>=def.maxLevel;
+    const dots=Array.from({length:def.maxLevel},(_,i)=>`<i class="${i<level?'on':''}"></i>`).join('');
+    const btn=mode==='choose'&&!maxed?`<button type="button" class="choose-upgrade" data-upgrade="${def.id}">Choose</button>`:mode==='choose'&&maxed?'<span class="maxed-label">MAX</span>':'';
+    return `<article class="upgrade-choice ${maxed?'is-max':''}"><div class="upgrade-icon">${def.icon}</div><h3>${def.name}</h3><p>${def.shortEffect}</p><div class="upgrade-level"><strong>Lv. ${level}</strong><span>${dots}</span></div>${btn}</article>`;
+  }
+
+  function renderUpgrades(s,mode='view'){
+    upgradeMode=mode;const defs=Object.values(D.upgrades);
+    el.upgradeChoices.innerHTML=defs.map(def=>upgradeCard(def,s,mode)).join('');
+    el.closeUpgrade.hidden=mode==='choose';el.upgradeNext.hidden=true;
+    if(mode==='choose'){
+      el.upgradeEyebrow.textContent='DAY COMPLETE';el.upgradeTitle.textContent='Choose an Upgrade';el.upgradeIntro.textContent='Pick one permanent upgrade before the next day.';
+      const available=window.PS_GAME.availableUpgrades();
+      if(!available.length){el.upgradeIntro.textContent='All core upgrades are maxed. Your shop is ready!';const r=window.PS_GAME.skipUpgradeIfMaxed();if(r.ok){el.upgradeNext.hidden=false;el.upgradeNext.textContent=`Start Day ${r.newDay} →`;}}
+    }else{
+      el.upgradeEyebrow.textContent='SHOP GROWTH';el.upgradeTitle.textContent='Upgrade Shop';el.upgradeIntro.textContent='Permanent upgrades are chosen after each completed day.';
+    }
+  }
+
+  function openUpgradeView(){const s=window.PS_GAME.getState();if(s.phase!=='PREP')return;renderUpgrades(s,'view');el.upgradeOverlay.hidden=false;setTimeout(()=>el.closeUpgrade.focus(),0);}
+  function openUpgradeChoice(){renderUpgrades(window.PS_GAME.getState(),'choose');el.upgradeOverlay.hidden=false;}
+  function closeUpgradeView(){if(upgradeMode!=='view')return;el.upgradeOverlay.hidden=true;el.upgrade.focus();}
+
   function renderUnlock(s){
-    if(!s.pendingUnlocks?.length)return;
-    const id=s.pendingUnlocks[0];const item=D.items[id];if(!item)return;
-    const key=`${s.day}:${id}`;if(shownUnlockKey===key && !el.unlockOverlay.hidden)return;
-    shownUnlockKey=key;
-    el.unlockIcon.src=item.icon;el.unlockIcon.alt=item.name;el.unlockTitle.textContent=item.name;
-    el.unlockText.textContent=`${item.name} is now available in Restock.`;
-    el.unlockOverlay.hidden=false;
+    if(!s.pendingUnlocks?.length||!el.upgradeOverlay.hidden)return;
+    const id=s.pendingUnlocks[0],item=D.items[id];if(!item)return;const key=`${s.day}:${id}`;if(shownUnlockKey===key&&!el.unlockOverlay.hidden)return;shownUnlockKey=key;
+    el.unlockIcon.src=item.icon;el.unlockIcon.alt=item.name;el.unlockTitle.textContent=item.name;el.unlockText.textContent=`${item.name} is now available in Restock.`;el.unlockOverlay.hidden=false;
   }
 
   function render(s){
     el.coins.textContent=Math.floor(s.coins);el.day.textContent=`Day ${s.day}`;el.target.textContent=s.target;
     const pct=Math.min(100,(s.revenue/s.target)*100);el.fill.style.width=`${pct}%`;el.progress.textContent=`${s.revenue} / ${s.target}`;
-    el.bread.innerHTML=stockSprites('bread',s.inventory.bread);el.snack.innerHTML=stockSprites('snack',s.inventory.snack);renderDrinks(s);
-    renderCustomers(s);
-    el.restock.disabled=!['PREP','RUNNING'].includes(s.phase);el.open.disabled=s.phase!=='PREP';
+    el.bread.innerHTML=stockSprites('bread',s.inventory.bread,s.maxStock);el.snack.innerHTML=stockSprites('snack',s.inventory.snack,s.maxStock);renderDrinks(s);renderCustomers(s);
+    el.restock.disabled=!['PREP','RUNNING'].includes(s.phase);el.upgrade.disabled=s.phase!=='PREP';el.open.disabled=s.phase!=='PREP';
     el.openText.textContent=s.phase==='PREP'?'Open Shop':s.phase==='RUNNING'?`${Math.ceil(s.timeRemaining)}s`:'Closed';
+    const boosted=s.nextDayBoost&&s.nextDayBoost.day===s.day;el.boost.hidden=!boosted;
     if(lastCoins!==null&&s.coins>lastCoins&&s.phase==='RUNNING')coinPop(s.coins-lastCoins);lastCoins=s.coins;
-    if(lastRevenue!==null&&s.revenue>lastRevenue){
-      const sold=s.revenue-lastRevenue;
-      const bonus=s.bonusCoinsEarned-lastBonus;
-      showToast(bonus>0?`Sold! +${sold} coin • ⚡ +${bonus}`:`Sold! +${sold} coin`);
-    }
-    lastRevenue=s.revenue;lastBonus=s.bonusCoinsEarned||0;
+    if(lastRevenue!==null&&s.revenue>lastRevenue){const sold=s.revenue-lastRevenue,bonus=s.bonusCoinsEarned-lastBonus;showToast(bonus>0?`Sold! +${sold} coin • ⚡ +${bonus}`:`Sold! +${sold} coin`);}lastRevenue=s.revenue;lastBonus=s.bonusCoinsEarned||0;
     if(s.phase==='SUMMARY'&&el.summaryOverlay.hidden)renderSummary(s);
-    if(!el.restockOverlay.hidden)renderRestock(s);
+    if(s.phase==='UPGRADE'&&el.upgradeOverlay.hidden){el.summaryOverlay.hidden=true;openUpgradeChoice();}
+    if(!el.restockOverlay.hidden)renderRestock(s);if(!el.upgradeOverlay.hidden)renderUpgrades(s,upgradeMode);
     renderUnlock(s);
   }
 
   function bind(){
-    el.restock.addEventListener('click',openRestock);
-    $('#closeRestockBtn').addEventListener('click',closeRestock);
-    el.restockOverlay.addEventListener('click',e=>{if(e.target===el.restockOverlay)closeRestock()});
-    el.restockCards.addEventListener('click',e=>{const b=e.target.closest('[data-buy]');if(!b)return;const r=window.PS_GAME.restock(b.dataset.buy);if(r.ok)showToast(`${r.item.name} +${r.qty}`)});
-    el.open.addEventListener('click',()=>{if(window.PS_GAME.openShop())showToast(`Day ${window.PS_GAME.getState().day} — Shop Open!`)});
-    $('#nextDayBtn').addEventListener('click',()=>{
-      el.summaryOverlay.hidden=true;
-      if(window.PS_GAME.nextDay()){
-        const s=window.PS_GAME.getState();
-        showToast(s.day>5?'Day 5 tuning continues temporarily':`Welcome to Day ${s.day}!`);
-      }
-    });
-    $('#unlockOkBtn').addEventListener('click',()=>{el.unlockOverlay.hidden=true;window.PS_GAME.clearPendingUnlocks();el.restock.focus()});
+    el.restock.addEventListener('click',openRestock);$('#closeRestockBtn').addEventListener('click',closeRestock);el.restockOverlay.addEventListener('click',e=>{if(e.target===el.restockOverlay)closeRestock();});
+    el.restockCards.addEventListener('click',e=>{const b=e.target.closest('[data-buy]');if(!b)return;const r=window.PS_GAME.restock(b.dataset.buy);if(r.ok)showToast(`${r.item.name} +${r.qty}`);});
+    el.upgrade.addEventListener('click',openUpgradeView);el.closeUpgrade.addEventListener('click',closeUpgradeView);el.upgradeOverlay.addEventListener('click',e=>{if(e.target===el.upgradeOverlay&&upgradeMode==='view')closeUpgradeView();});
+    el.open.addEventListener('click',()=>{if(window.PS_GAME.openShop())showToast(`Day ${window.PS_GAME.getState().day} — Shop Open!`);});
+    el.rewardChoices.addEventListener('click',e=>{const b=e.target.closest('[data-reward]');if(!b||b.disabled)return;const r=window.PS_GAME.claimReward(b.dataset.reward);if(r.ok){el.summaryOverlay.hidden=true;showToast(`Reward: ${r.detail}`);openUpgradeChoice();}});
+    el.summaryContinue.addEventListener('click',()=>{if(window.PS_GAME.continueAfterFailure()){el.summaryOverlay.hidden=true;openUpgradeChoice();}});
+    el.upgradeChoices.addEventListener('click',e=>{const b=e.target.closest('[data-upgrade]');if(!b)return;const r=window.PS_GAME.chooseUpgrade(b.dataset.upgrade);if(!r.ok)return;showToast(`${r.name} → Lv. ${r.level}`);renderUpgrades(window.PS_GAME.getState(),'choose');el.upgradeIntro.textContent=`${r.name} upgraded permanently. Day ${r.newDay} is ready.`;el.upgradeNext.hidden=false;el.upgradeNext.textContent=`Start Day ${r.newDay} →`;for(const x of el.upgradeChoices.querySelectorAll('.choose-upgrade'))x.remove();});
+    el.upgradeNext.addEventListener('click',()=>{el.upgradeOverlay.hidden=true;upgradeMode='view';const s=window.PS_GAME.getState();showToast(`Welcome to Day ${s.day}!`);renderUnlock(s);el.restock.focus();});
+    $('#unlockOkBtn').addEventListener('click',()=>{el.unlockOverlay.hidden=true;window.PS_GAME.clearPendingUnlocks();el.restock.focus();});
   }
 
   return {bind,render,showToast};
