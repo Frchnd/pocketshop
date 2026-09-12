@@ -9,7 +9,7 @@ window.PS_GAME = (() => {
   const random=(min,max)=>min+Math.random()*(max-min);
 
   function configForDay(day){
-    // M1-A is authored through Day 5. Day 6+ temporarily reuses Day 5 tuning.
+    // M1 is authored through Day 5. Day 6+ temporarily reuses Day 5 tuning.
     return D.days[Math.min(Math.max(1,day),5)];
   }
 
@@ -43,7 +43,8 @@ window.PS_GAME = (() => {
       revenue:0, inventory, maxStock:D.maxStock, unlockedItems:unlocked,
       customers:[], served:0, lost:0, sold:blankSold(),
       spawnIn:1.2, paused:false, nextCustomerId:1, transactionLock:false,
-      pendingUnlocks:[], tuningDay:cfg.day
+      pendingUnlocks:[], tuningDay:cfg.day, bonusCoinsEarned:0,
+      servedByType:{normal:0,impatient:0,bulk:0}
     };
   }
 
@@ -62,6 +63,15 @@ window.PS_GAME = (() => {
     state.tuningDay=cfg.day;
   }
 
+  function weightedChoice(weightMap,fallback){
+    const entries=Object.entries(weightMap||{}).filter(([,w])=>Number(w)>0);
+    const total=entries.reduce((sum,[,w])=>sum+Number(w),0);
+    if(!entries.length||total<=0)return fallback;
+    let r=Math.random()*total;
+    for(const [id,w] of entries){r-=Number(w);if(r<=0)return id;}
+    return entries[0][0];
+  }
+
   function weightedItem(){
     const demand=demandForDay(state.day);
     const ids=state.unlockedItems.filter(id=>D.items[id] && (demand[id]||0)>0);
@@ -75,6 +85,19 @@ window.PS_GAME = (() => {
     let r=Math.random()*total;
     for(const id of ids){r-=weights[id];if(r<=0)return id;}
     return ids[0];
+  }
+
+  function chooseCustomerType(){
+    const cfg=configForDay(state.day);
+    const id=weightedChoice(cfg.customerTypes,'normal');
+    return D.customerTypes[id] ? id : 'normal';
+  }
+
+  function patienceFor(typeId){
+    const cfg=configForDay(state.day);
+    if(typeId==='normal' && Number.isFinite(cfg.normalPatience)) return cfg.normalPatience;
+    if(typeId==='impatient' && Number.isFinite(cfg.impatientPatience)) return cfg.impatientPatience;
+    return D.customerTypes[typeId]?.patience ?? 12;
   }
 
   function restock(id){
@@ -97,6 +120,7 @@ window.PS_GAME = (() => {
     refreshDayConfig();
     state.phase='RUNNING';state.spawnIn=1;state.customers=[];
     state.revenue=0;state.served=0;state.lost=0;state.sold=blankSold();
+    state.bonusCoinsEarned=0;state.servedByType={normal:0,impatient:0,bulk:0};
     emit();return true;
   }
 
@@ -105,9 +129,13 @@ window.PS_GAME = (() => {
   function spawnCustomer(){
     const cfg=configForDay(state.day);
     if(state.customers.length>=cfg.maxCustomers)return;
+    const type=chooseCustomerType();
+    const typeData=D.customerTypes[type]||D.customerTypes.normal;
+    const patience=patienceFor(type);
     state.customers.push({
-      id:state.nextCustomerId++,item:weightedItem(),patience:12,maxPatience:12,
-      age:0,state:'WAITING',avatar:Math.floor(Math.random()*D.customers.length),processed:false
+      id:state.nextCustomerId++, type, item:weightedItem(), quantity:typeData.quantity||1,
+      patience,maxPatience:patience,age:0,state:'WAITING',avatar:typeData.avatar||0,processed:false,
+      saleQuantity:0,bonusCoins:0
     });
     state.spawnIn=random(cfg.spawnMin,cfg.spawnMax);
   }
@@ -115,14 +143,32 @@ window.PS_GAME = (() => {
   function processSale(c){
     if(c.processed || c.state!=='WAITING' || state.inventory[c.item]<=0)return;
     const item=D.items[c.item];
-    c.processed=true;c.state='BUYING';
-    state.inventory[c.item]=Math.max(0,state.inventory[c.item]-1);
-    state.coins+=item.sellPrice;state.revenue+=item.sellPrice;state.served++;state.sold[c.item]++;
+    const type=D.customerTypes[c.type]||D.customerTypes.normal;
+    const requestedQty=Math.max(1,c.quantity||1);
+    const saleQty=Math.min(requestedQty,state.inventory[c.item]);
+    if(saleQty<=0)return;
+
+    c.processed=true;c.state='BUYING';c.saleQuantity=saleQty;
+    const baseRevenue=item.sellPrice*saleQty;
+    let bonus=0;
+    if(type.bonusThreshold!==null && c.patience/c.maxPatience>type.bonusThreshold){
+      bonus=type.bonusCoins||0;
+    }
+    c.bonusCoins=bonus;
+
+    state.inventory[c.item]=Math.max(0,state.inventory[c.item]-saleQty);
+    state.coins+=baseRevenue+bonus;
+    state.revenue+=baseRevenue;
+    state.bonusCoinsEarned+=bonus;
+    state.served++;
+    state.servedByType[c.type]=(state.servedByType[c.type]||0)+1;
+    state.sold[c.item]+=saleQty;
     emit();
+
     setTimeout(()=>{
       c.state='LEAVING';emit();
       setTimeout(()=>{state.customers=state.customers.filter(x=>x.id!==c.id);emit();},220);
-    },260);
+    },280);
   }
 
   function failCustomer(c){
@@ -144,6 +190,7 @@ window.PS_GAME = (() => {
     for(const c of [...state.customers]){
       if(c.state!=='WAITING')continue;
       c.age+=dt;c.patience=Math.max(0,c.patience-dt);
+      // Transactions remain automatic. Bulk customers buy up to 2 of the same item.
       if(c.age>=.8 && state.inventory[c.item]>0)processSale(c);
       else if(c.patience<=0)failCustomer(c);
     }
@@ -153,7 +200,7 @@ window.PS_GAME = (() => {
   function endDay(){
     if(state.phase!=='RUNNING')return;
     state.phase='SUMMARY';state.customers=[];
-    // Existing M0 consolation behavior is retained until the full reward milestone.
+    // Existing M0 consolation behavior is retained until M1-C reward choices.
     if(state.revenue<state.target)state.coins+=30;
     window.PS_SAVE.save(state);emit();
   }
@@ -171,6 +218,7 @@ window.PS_GAME = (() => {
     }
     state.pendingUnlocks=newlyUnlocked;
     state.phase='PREP';state.revenue=0;state.customers=[];state.served=0;state.lost=0;state.sold=blankSold();state.spawnIn=1.2;state.paused=false;
+    state.bonusCoinsEarned=0;state.servedByType={normal:0,impatient:0,bulk:0};
     window.PS_SAVE.save(state);emit();return true;
   }
 

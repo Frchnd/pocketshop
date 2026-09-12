@@ -9,7 +9,7 @@ window.PS_UI = (() => {
     summaryResult:$('#summaryResult'),sumRevenue:$('#sumRevenue'),sumServed:$('#sumServed'),sumLost:$('#sumLost'),sumBest:$('#sumBest'),
     unlockOverlay:$('#unlockOverlay'),unlockIcon:$('#unlockItemIcon'),unlockTitle:$('#unlockTitle'),unlockText:$('#unlockItemText')
   };
-  let lastCoins=null,lastRevenue=null,toastTimer=null,shownUnlockKey='';
+  let lastCoins=null,lastRevenue=null,lastBonus=0,toastTimer=null,shownUnlockKey='';
 
   function stockSprites(id,stock){
     const count=stock<=0?0:stock<=2?2:stock<=4?4:6;
@@ -48,21 +48,39 @@ window.PS_UI = (() => {
   }
   function closeRestock(){el.restockOverlay.hidden=true;window.PS_GAME.setPaused(false);el.restock.focus()}
 
+  function customerMarkup(c){
+    const item=D.items[c.item];
+    const type=D.customerTypes[c.type]||D.customerTypes.normal;
+    const quantity=(c.quantity||1)>1?`<span class="request-qty">×${c.quantity}</span>`:'';
+    const badge=type.badge?`<span class="customer-type-badge ${c.type}" title="${type.name} customer">${type.badge}</span>`:'';
+    const cue=c.type==='impatient'?'<span class="impatient-cue" aria-hidden="true">〰</span>':'';
+    const basket=c.type==='bulk'?'<span class="bulk-cue" aria-hidden="true">👜</span>':'';
+    return `<article class="customer customer-${c.type}" aria-label="${type.name} customer requesting ${c.quantity||1} ${item.name}">
+      ${badge}${cue}${basket}
+      <div class="request-bubble"><img src="${item.icon}" alt="${item.name}">${quantity}</div>
+      <img class="customer-img" src="${D.customerAvatars[c.avatar]}" alt="${type.name} customer">
+      <div class="patience" aria-label="Patience"><i style="width:${Math.max(0,c.patience/c.maxPatience*100)}%;background:${patienceColor(c.patience,c.maxPatience)}"></i></div>
+    </article>`;
+  }
+
   function renderCustomers(s){
     const max=window.PS_GAME.getDayConfig(s.day).maxCustomers;
     el.grid.classList.toggle('cols-3',max>=3);
     if(!s.customers.length){
       el.grid.innerHTML='';el.hint.hidden=false;
-      el.hint.textContent=s.phase==='RUNNING'?'Customers are on the way…':`Day ${s.day} • Restock, then open the shop.`;
+      const cfg=window.PS_GAME.getDayConfig(s.day);
+      const types=Object.keys(cfg.customerTypes||{}).filter(k=>(cfg.customerTypes[k]||0)>0).map(k=>D.customerTypes[k]?.name).filter(Boolean).join(' • ');
+      el.hint.textContent=s.phase==='RUNNING'?'Customers are on the way…':`Day ${s.day} • ${types || 'Normal'} customers`;
       return;
     }
     el.hint.hidden=true;
-    el.grid.innerHTML=s.customers.map(c=>`<article class="customer" aria-label="Customer requesting ${D.items[c.item].name}"><div class="request-bubble"><img src="${D.items[c.item].icon}" alt="${D.items[c.item].name}"></div><img class="customer-img" src="${D.customers[c.avatar]}" alt="Customer"><div class="patience"><i style="width:${Math.max(0,c.patience/c.maxPatience*100)}%;background:${patienceColor(c.patience,c.maxPatience)}"></i></div></article>`).join('');
+    el.grid.innerHTML=s.customers.map(customerMarkup).join('');
   }
 
   function renderSummary(s){
     const success=s.revenue>=s.target;
-    el.summaryResult.textContent=success?'🎯 Target reached!':'🎯 Target not reached • +30 consolation coins';
+    const bonus=s.bonusCoinsEarned>0?` • +${s.bonusCoinsEarned} patience bonus`:'';
+    el.summaryResult.textContent=success?`🎯 Target reached!${bonus}`:`🎯 Target not reached • +30 consolation coins${bonus}`;
     el.sumRevenue.textContent=s.revenue;el.sumServed.textContent=s.served;el.sumLost.textContent=s.lost;
     const best=Object.keys(s.sold).sort((a,b)=>s.sold[b]-s.sold[a])[0];
     el.sumBest.textContent=s.sold[best]?`${D.items[best].name} ×${s.sold[best]}`:'—';
@@ -87,7 +105,12 @@ window.PS_UI = (() => {
     el.restock.disabled=!['PREP','RUNNING'].includes(s.phase);el.open.disabled=s.phase!=='PREP';
     el.openText.textContent=s.phase==='PREP'?'Open Shop':s.phase==='RUNNING'?`${Math.ceil(s.timeRemaining)}s`:'Closed';
     if(lastCoins!==null&&s.coins>lastCoins&&s.phase==='RUNNING')coinPop(s.coins-lastCoins);lastCoins=s.coins;
-    if(lastRevenue!==null&&s.revenue>lastRevenue)showToast(`Sold! +${s.revenue-lastRevenue} coin`);lastRevenue=s.revenue;
+    if(lastRevenue!==null&&s.revenue>lastRevenue){
+      const sold=s.revenue-lastRevenue;
+      const bonus=s.bonusCoinsEarned-lastBonus;
+      showToast(bonus>0?`Sold! +${sold} coin • ⚡ +${bonus}`:`Sold! +${sold} coin`);
+    }
+    lastRevenue=s.revenue;lastBonus=s.bonusCoinsEarned||0;
     if(s.phase==='SUMMARY'&&el.summaryOverlay.hidden)renderSummary(s);
     if(!el.restockOverlay.hidden)renderRestock(s);
     renderUnlock(s);
