@@ -14,3 +14,21 @@ button{font:inherit}.app-shell{width:min(100%,430px);margin:0 auto;padding:8px 8
 .toast{position:absolute;z-index:40;left:50%;top:118px;transform:translateX(-50%) translateY(-6px);max-width:80%;padding:8px 12px;border-radius:999px;background:#fff8e9;border:1px solid #e7d0bb;box-shadow:0 6px 18px rgba(73,50,40,.12);font-size:11px;font-weight:900;opacity:0;pointer-events:none;transition:.2s ease}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.tiny-footer{text-align:center;padding:8px 0 0;color:#8c7466;font-size:11px;font-weight:800}.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 @media (max-width:360px){.app-shell{padding-left:4px;padding-right:4px}.shop-scene{height:410px}.racks{top:128px}.rack-img{height:177px}.stock-sprite{width:32px;height:32px}.counter{height:105px}.cashier{bottom:77px;width:88px;height:94px}.register{bottom:77px}.shop-cat{bottom:81px}.customer-lane{min-height:138px}.action-btn{min-height:75px}.restock-cards{gap:5px}.restock-card{padding:6px}}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* M1-A progression additions */
+.drinks-stock{left:13%;right:13%;top:43px;height:126px;display:grid;grid-template-rows:repeat(3,1fr);gap:0}
+.drink-row{display:flex;align-items:center;justify-content:center;gap:1px;min-width:0;overflow:hidden}
+.drink-row img{width:31px;height:31px;object-fit:contain;filter:drop-shadow(0 1px 1px rgba(86,53,33,.12))}
+.drink-row.locked-row{opacity:.18}
+.customer-grid.cols-3{grid-template-columns:repeat(3,1fr);gap:4px}
+.customer-grid.cols-3 .customer-img{width:73px;height:76px;margin-top:27px}
+.customer-grid.cols-3 .request-bubble{width:43px;height:43px}
+.customer-grid.cols-3 .request-bubble img{width:29px;height:29px}
+.customer-grid.cols-3 .patience{height:9px}
+.unlock-overlay{align-items:center}
+.unlock-card{width:calc(100% - 48px);margin:auto;padding:22px 18px 18px;text-align:center;background:#fffaf1;border:2px solid #efcaa5;border-radius:25px;box-shadow:0 12px 40px rgba(71,43,35,.22)}
+.unlock-card small{display:inline-block;padding:5px 10px;border-radius:999px;background:#ffc5d4;color:#9b3656;font-size:11px;font-weight:900;letter-spacing:.04em}
+.unlock-card img{display:block;width:112px;height:112px;object-fit:contain;margin:10px auto 2px;filter:drop-shadow(0 4px 5px rgba(83,57,42,.13))}
+.unlock-card h2{margin:0;color:#5f3c31;font-size:28px}
+.unlock-card p{margin:6px 0 15px;color:#806b62;font-size:13px;font-weight:700}
+@media (max-width:360px){.drink-row img{width:28px;height:28px}.customer-grid.cols-3 .customer-img{width:66px;height:70px}}
