@@ -1,5 +1,5 @@
 window.PS_RELEASE = (() => {
-  const BUILD='M4';
+  const BUILD='M4.5';
   let registration=null,deferredInstall=null,reloadForUpdate=false,resetArmed=false,resetTimer=null;
   const $=s=>document.querySelector(s);
   const el={

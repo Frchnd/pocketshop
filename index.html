@@ -22,6 +22,7 @@
         <strong>Pocket Shop</strong><span>Loading your shop…</span>
       </div>
       <header class="hud">
+        <div class="hud-panel">
         <div class="hud-row">
           <div class="hud-card coin-card"><img src="./assets/icons/icon-coin.webp" alt="" /><strong id="coins">80</strong></div>
           <div class="hud-card day-card"><img src="./assets/icons/icon-calendar.webp" alt="" /><strong id="dayLabel">Day 1</strong></div>
@@ -30,7 +31,8 @@
         <div class="progress-row">
           <img class="sun-icon" src="./assets/icons/icon-sun.webp" alt="" />
           <div class="progress-track" aria-label="Daily revenue progress"><div id="progressFill" class="progress-fill"></div></div>
-          <strong id="progressText">0 / 100</strong><img class="gift-icon" src="./assets/icons/icon-gift.webp" alt="" /><button id="settingsBtn" class="settings-btn" type="button" aria-label="Settings">⚙</button>
+          <strong id="progressText">0 / 100</strong><img class="gift-icon" src="./assets/icons/icon-gift.webp" alt="" /><button id="settingsBtn" class="settings-btn" type="button" aria-label="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="M19 13.2v-2.4l-2-.55a7 7 0 0 0-.67-1.61l1.03-1.8-1.7-1.7-1.8 1.03A7 7 0 0 0 12.25 5L11.7 3h-2.4l-.55 2a7 7 0 0 0-1.61.67l-1.8-1.03-1.7 1.7 1.03 1.8A7 7 0 0 0 4 9.75l-2 .55v2.4l2 .55c.14.57.37 1.11.67 1.61l-1.03 1.8 1.7 1.7 1.8-1.03c.5.3 1.04.53 1.61.67l.55 2h2.4l.55-2a7 7 0 0 0 1.61-.67l1.8 1.03 1.7-1.7-1.03-1.8c.3-.5.53-1.04.67-1.61l2-.55Z"/></svg></button>
+        </div>
         </div>
       </header>
 
@@ -51,9 +53,9 @@
       <section class="customer-lane" aria-label="Customer queue"><div id="customerGrid" class="customer-grid"></div><div id="laneHint" class="lane-hint">Restock your shelves, then open the shop.</div></section>
 
       <nav class="bottom-actions" aria-label="Main actions">
-        <button id="restockBtn" class="action-btn restock-btn" type="button"><span class="action-icon">📦</span><strong>Restock</strong></button>
-        <button id="upgradeBtn" class="action-btn upgrade-btn" type="button"><span class="action-icon">⬆</span><strong>Upgrade</strong></button>
-        <button id="openShopBtn" class="action-btn open-btn" type="button"><span class="action-icon">🪧</span><strong id="openShopText">Open Shop</strong></button>
+        <button id="restockBtn" class="action-btn restock-btn" type="button"><span class="action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg></span><strong>Restock</strong></button>
+        <button id="upgradeBtn" class="action-btn upgrade-btn" type="button"><span class="action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20V5"/><path d="m6.5 10.5 5.5-6 5.5 6"/><path d="M6 20h12"/></svg></span><strong>Upgrade</strong></button>
+        <button id="openShopBtn" class="action-btn open-btn" type="button"><span class="action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 8.5h14v10H5Z"/><path d="M8 8.5 9 5h6l1 3.5"/><path d="M8 13h8"/></svg></span><strong id="openShopText">Open Shop</strong></button>
       </nav>
 
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -84,7 +86,7 @@
           <div class="setting-row"><div><strong>Music</strong><small>Cozy background melody</small></div><button id="musicToggle" class="toggle-btn" type="button" role="switch" aria-checked="true"><span></span></button></div>
           <div class="setting-row"><div><strong>Sound FX</strong><small>Taps, sales, events & rewards</small></div><button id="sfxToggle" class="toggle-btn" type="button" role="switch" aria-checked="true"><span></span></button></div>
           <div id="installRow" class="setting-row release-setting" hidden><div><strong>Install App</strong><small>Add Pocket Shop to your home screen</small></div><button id="installAppBtn" class="small-setting-btn" type="button">Install</button></div>
-          <div class="setting-row release-setting"><div><strong>App Update</strong><small id="updateStatusText">Pocket Shop M4 is ready</small></div><button id="checkUpdateBtn" class="small-setting-btn" type="button">Check</button></div>
+          <div class="setting-row release-setting"><div><strong>App Update</strong><small id="updateStatusText">Pocket Shop M4.5 is ready</small></div><button id="checkUpdateBtn" class="small-setting-btn" type="button">Check</button></div>
           <div class="setting-row release-setting danger-setting"><div><strong>Reset Progress</strong><small>Deletes local Pocket Shop progress on this device</small></div><button id="resetProgressBtn" class="small-setting-btn danger-btn" type="button">Reset</button></div>
           <p class="settings-note">Audio starts after your first tap. Progress is saved locally and the game can run offline after the first successful load.</p>
         </section>
@@ -119,20 +121,20 @@
 
       <div id="summaryOverlay" class="overlay summary-overlay" hidden>
         <section class="summary-card" role="dialog" aria-modal="true" aria-labelledby="summaryTitle">
-          <div class="summary-cat">🐱✨</div><h2 id="summaryTitle">Day Complete!</h2><p id="summaryResult" class="summary-result"></p>
+          <div class="summary-mascot-wrap"><img class="summary-mascot" src="./assets/shop/shop-cat.webp" alt="" /><span aria-hidden="true">✦</span><span aria-hidden="true">✦</span></div><h2 id="summaryTitle">Day Complete!</h2><p id="summaryResult" class="summary-result"></p>
           <div class="summary-stats">
             <div><small>Coins earned</small><strong id="sumRevenue">0</strong></div><div><small>Customers served</small><strong id="sumServed">0</strong></div>
             <div><small>Customers lost</small><strong id="sumLost">0</strong></div><div><small>Best seller</small><strong id="sumBest">—</strong></div>
           </div>
           <section id="rewardSection" class="reward-section" hidden>
-            <h3>🎁 Choose Your Reward!</h3><div id="rewardChoices" class="reward-choices"></div>
+            <h3>Choose Your Reward</h3><div id="rewardChoices" class="reward-choices"></div>
           </section>
           <button id="summaryContinueBtn" class="next-day-btn" type="button" hidden>Continue →</button>
         </section>
       </div>
     </section>
 
-    <footer class="tiny-footer">Small Shop • Big Happiness • M4</footer>
+    <footer class="tiny-footer">Small Shop • Big Happiness • M4.5</footer>
   </main>
 
   <script src="./js/data.js" defer></script><script src="./js/save.js" defer></script><script src="./js/game.js" defer></script><script src="./js/audio.js" defer></script><script src="./js/ui.js" defer></script><script src="./js/release.js" defer></script><script src="./js/app.js" defer></script>

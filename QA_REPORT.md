@@ -1,18 +1,17 @@
-# Pocket Shop M4 — QA Report
+# Pocket Shop M4.5 — QA Report
 
-Build: **M4 PWA Release Build**
+Build: **M4.5 Premium UI/UX Polish**
 
 ## Result
 
-**PASS — package approved for deploy after automated checks.**
+**PASS — deployment package approved after automated checks.**
 
-The ZIP is not being treated as ready merely because the JavaScript parses. The underlying game/save modules were executed, M3-to-M4 migration and corruption recovery were exercised, PWA release controls were executed against browser API test doubles, all static references were verified, every service-worker core file was fetched over a local HTTP server, and optimized image files were decoded.
+M4.5 changes presentation heavily but intentionally leaves gameplay/save rules intact. Before packaging, the build was syntax-checked, its complete static/PWA package was validated, game and save modules were executed, the updated UI module was run against DOM test doubles, the release manager and audio module were executed, every offline-core resource was served over local HTTP, and every WebP asset was decoded. The new transparent-asset pass was also explicitly verified.
 
-## Checks completed
-
-### 1. JavaScript syntax — 8 PASS
+## 1. JavaScript syntax — 8 PASS
 
 `node --check` passed for:
+
 - `js/app.js`
 - `js/audio.js`
 - `js/data.js`
@@ -22,85 +21,119 @@ The ZIP is not being treated as ready merely because the JavaScript parses. The 
 - `js/ui.js`
 - `service-worker.js`
 
-### 2. Static / PWA package validation — 191 PASS
+## 2. Static / PWA / visual package validation — 146 PASS
 
 Checks include:
-- all local HTML scripts, styles and images exist;
-- HTML IDs are unique;
-- literal UI/release `#id` selectors resolve to actual elements;
-- manifest parses and uses standalone + portrait-primary;
-- 192 and 512 `any` icons have exact dimensions;
-- 192 and 512 dedicated `maskable` icons have exact dimensions;
-- all lossless WebP art decodes successfully;
-- all service-worker CORE paths exist;
-- M4 cache version and `SKIP_WAITING` message hook exist;
-- navigation has cached offline fallback;
-- `release.js` is part of the offline core cache;
-- CSS brace balance is valid;
-- M4 startup/update/offline/install UI hooks are present;
-- no removed PNG game-art paths remain referenced;
-- art payload is smaller than M3 by more than 15%.
 
-Measured art payload:
-- M3 assets: **814,051 bytes**
-- M4 assets: **601,612 bytes**
-- reduction: **26.1%**
+- unique HTML IDs;
+- all local scripts, styles and HTML image references exist;
+- custom SVG action icons are present for Restock / Upgrade / Open Shop;
+- premium HUD / summary / action hooks exist;
+- manifest parses as standalone portrait PWA;
+- PWA icon files exist and match declared dimensions;
+- CSS parses without top-level syntax errors;
+- M4.5 premium design-system selectors exist;
+- all 24 WebP assets decode successfully;
+- all non-background art assets contain real transparent pixels after cleanup;
+- all service-worker `CORE` paths exist;
+- cache identity is `pocket-shop-m45-v9`;
+- release manager and stylesheet are included in offline core;
+- `SKIP_WAITING` update flow remains present;
+- M4.5 version labels are consistent.
 
-### 3. Game + save executable regression — 30 PASS
+### Asset integration improvement
 
-Passed scenarios include:
-- fresh Day 1 / 80 coins / starting inventory;
-- Bread restock exact quantity and cost;
-- PREP -> RUNNING transition;
-- automatic customer sale mutates stock/revenue/coins;
-- M3 save v6 -> M4 save v7 migration;
-- migrated coins/day/upgrades/audio settings preserved;
-- corrupt v7 JSON is backed up and recovery falls back to valid v6 data;
-- RUNNING save normalizes to PREP on reload;
-- Day 3 Snack Rush trigger, price modifier, expiry and modifier reset;
-- Day 5 Morning Rush immediate trigger and Coffee price modifier;
-- reward -> upgrade flow;
-- Rack+ advances day and increases capacity;
-- Music setting persists;
-- Reset removes the current M4 save.
+M4 asset payload: **601,612 bytes**  
+M4.5 asset payload: **458,828 bytes**  
+Reduction: **23.7%**
 
-### 4. PWA release-manager executable smoke — 13 PASS
+More importantly, racks, products, characters, counter, sign, awning and UI icons were cleaned from their original light rectangular crop backgrounds. This directly targets the previous pasted-on visual appearance.
 
-`release.js` was executed with DOM, service-worker and connectivity test doubles. Passed checks include:
-- build identity M4;
-- install event binding;
+## 3. Game + save executable regression — 61 PASS
+
+Executed scenarios include:
+
+- fresh Day 1 state, starting coins, target, inventory and capacity;
+- Bread restock exact quantity/cost and full-rack rejection;
+- PREP → RUNNING transition and duplicate-open rejection;
+- automatic sale changes stock, revenue and coins;
+- gameplay pause freezes time;
+- Profit+ sell-price calculation;
+- M3 save v6 → current v7 migration;
+- migrated day, coin, Rack+, capacity and audio settings preservation;
+- corrupt v7 backup and fallback recovery from valid v6;
+- RUNNING save reload safety back to PREP;
+- Day 3 Snack Rush trigger, price modifier, expiry and reset;
+- Day 5 Morning Rush and Coffee price modifier;
+- cash reward → upgrade flow;
+- Rack+ capacity change and next-day progression;
+- complete Day 1 → Day 5 progression smoke;
+- Juice unlock on Day 3;
+- Coffee unlock on Day 5;
+- Day 5 target/duration configuration intact;
+- Music preference persistence;
+- reset removes current and legacy saves.
+
+## 4. UI module executable smoke — 20 PASS
+
+`ui.js` was executed against DOM and game-state test doubles. Checks include:
+
+- UI module export and event binding;
+- coin / day / target / progress render;
+- bakery and drinks stock render;
+- empty customer-lane hint render;
+- Restock action binding and overlay opening;
+- new M4.5 Restock card markup (`restock-art`, price chip, stock meter, CTA);
+- summary opening and success text;
+- reward section visibility;
+- new premium reward-art and stock-box markup.
+
+## 5. PWA release-manager executable smoke — 19 PASS
+
+`release.js` was executed against service-worker/connectivity/DOM test doubles. Checks include:
+
+- build identity **M4.5**;
+- service-worker registration and scope;
+- install-event listener;
 - online/offline listeners;
-- update-check button binding;
-- reset button binding;
-- service-worker registration update watcher;
-- controller-change watcher;
-- startup cover dismissal;
-- offline badge + toast behavior;
-- reset two-tap arming state;
-- update-check status flow.
+- Check Update / Reset / Install / Refresh / Later bindings;
+- startup-cover dismissal;
+- offline status badge and toast;
+- two-tap reset protection;
+- explicit service-worker update check.
 
-### 5. Offline core local HTTP — 39 PASS
+## 6. Audio runtime smoke — 5 PASS
 
-Every URL listed in service-worker `CORE` returned HTTP 200 from a local static server, including:
-- document, manifest and CSS;
-- seven JavaScript modules;
-- any + maskable PWA icons;
-- all shop, rack, product, customer and HUD assets required by the game.
+`audio.js` was executed with an `AudioContext` test double. Checks include:
+
+- module export;
+- first-gesture music start;
+- sale SFX execution;
+- disabled-audio safety;
+- disposal cleanup.
+
+## 7. Offline core local HTTP — 39 PASS
+
+Every URL listed in service-worker `CORE` returned HTTP 200 from a local static server, including the document, manifest, CSS, JavaScript modules, PWA icons, shop art, racks, items, customers and HUD assets.
 
 ## Automated total before ZIP integrity
 
-**281 checks passed.**
+**298 checks passed.**
+
+## Visual integration inspection
+
+A local composite of the cleaned shop assets was generated and inspected to verify that the shop sign, racks, counter, cashier, register and cat now sit on the same scene without the light rectangular crop backgrounds that previously made the game look assembled from separate cards.
 
 ## Browser-driven E2E attempt
 
-A Playwright/Chromium run was attempted against the local server. Chromium launches, but navigation to localhost is blocked by the execution environment with:
+A real Playwright run using system Chromium was attempted against the M4.5 local HTTP build. Chromium launches, but navigation to localhost is blocked by this execution environment:
 
 `net::ERR_BLOCKED_BY_ADMINISTRATOR`
 
-Therefore this report does **not** claim a real Chromium click-through/offline-navigation test that did not happen. Game behavior was instead executed directly, the PWA release manager was run against browser API test doubles, and the complete service-worker core was fetched over HTTP.
+Therefore this report does **not** claim a browser click-through test that did not occur. Functional behavior was instead executed through the game/save modules, UI test doubles, PWA release-manager test doubles, audio test doubles and local HTTP resource validation.
 
-Final phone QA remains necessary for device-specific display scaling, Web Audio unlock behavior, Android install UI, and the standalone PWA shell.
+Final phone QA remains necessary for actual Android rendering, safe-area behavior, touch feel, installed-PWA shell and Web Audio unlock behavior.
 
 ## ZIP integrity
 
-**PASS.** The final deployment archive was tested with `unzip -t`; all archived files passed compressed-data integrity checks.
+The ZIP is tested after creation with `unzip -t`. It is only handed off if that integrity test passes.

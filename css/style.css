@@ -117,3 +117,273 @@ button{font:inherit}.app-shell{width:min(100%,430px);margin:0 auto;padding:8px 8
 .release-setting{padding-top:10px;padding-bottom:10px}.settings-card{max-height:calc(100% - 26px);overflow:auto}.danger-setting{margin-top:1px}.danger-btn{background:#e9ddd6;color:#8a4a43}.danger-btn.armed{background:#e76f67;color:#fff}.settings-note{padding-bottom:2px}
 @media (max-width:360px){.release-banner{left:6px;right:6px;bottom:92px;padding:8px;gap:5px}.release-banner button{padding:6px 8px}.startup-loading img{width:72px;height:72px}.settings-card{max-height:calc(100% - 16px)}}
 @media (prefers-reduced-motion:reduce){.startup-loading{transition:none!important}}
+
+/* ======================================================================
+   M4.5 — PREMIUM UI/UX POLISH
+   Presentation-only pass. Gameplay, economy and progression are unchanged.
+   ====================================================================== */
+:root{
+  --premium-ink:#4d372f;
+  --premium-muted:#8b7266;
+  --premium-line:#ead9c8;
+  --premium-paper:#fffaf1;
+  --premium-paper-2:#fff4e6;
+  --premium-shadow:rgba(83,52,39,.16);
+}
+body{
+  background:
+    radial-gradient(circle at 50% -20%,rgba(255,255,255,.95),transparent 46%),
+    linear-gradient(180deg,#f8f0e6 0%,#eee3d7 100%);
+  font-family:ui-rounded,"SF Pro Rounded","Arial Rounded MT Bold","Avenir Next","Trebuchet MS",system-ui,sans-serif;
+}
+.app-shell{width:min(100%,430px);padding:6px 6px calc(10px + env(safe-area-inset-bottom))}
+.game{
+  border:1px solid rgba(107,79,58,.16);
+  border-radius:32px;
+  background:#fff8ed;
+  box-shadow:0 18px 52px rgba(84,56,43,.16),0 2px 8px rgba(84,56,43,.08);
+}
+
+/* One integrated control deck instead of three floating white boxes. */
+.hud{
+  padding:calc(8px + env(safe-area-inset-top)) 8px 7px;
+  background:linear-gradient(180deg,#fbf2e6 0%,#f8ead9 100%);
+  border-bottom:1px solid rgba(147,106,74,.12);
+}
+.hud-panel{
+  position:relative;
+  padding:7px 8px 6px;
+  border:1px solid rgba(171,130,95,.17);
+  border-radius:21px;
+  background:linear-gradient(180deg,rgba(255,253,248,.94),rgba(255,247,237,.92));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 4px 12px rgba(109,75,52,.08);
+}
+.hud-panel:before{
+  content:"";position:absolute;inset:1px;border-radius:19px;pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.65);
+}
+.hud-row{gap:0;grid-template-columns:1fr .93fr 1.15fr}
+.hud-card{
+  height:41px;border:0;border-radius:0;background:transparent;box-shadow:none;
+  position:relative;justify-content:center;padding:0 6px;
+}
+.hud-card:not(:last-child):after{
+  content:"";position:absolute;right:0;top:7px;bottom:7px;width:1px;
+  background:linear-gradient(transparent,#ead6c2 25%,#ead6c2 75%,transparent);
+}
+.hud-card img{width:28px;height:28px;filter:drop-shadow(0 2px 2px rgba(98,65,45,.10))}
+.hud-card strong{font-size:15px;letter-spacing:-.02em;color:#49352e;font-variant-numeric:tabular-nums}
+.target-card small{font-size:8px;letter-spacing:.03em;text-transform:uppercase;color:#a08070;font-weight:900}
+.progress-row{margin-top:5px;padding:5px 5px 1px;gap:6px;border-top:1px solid rgba(224,205,187,.72)}
+.progress-track{
+  height:13px;border:1px solid #d8d8d3;background:#e7e9e7;
+  box-shadow:inset 0 1px 3px rgba(69,75,72,.10),0 1px 0 #fff;border-radius:999px;
+}
+.progress-fill{
+  background:linear-gradient(180deg,#7bdfb2 0%,#52c894 55%,#45b984 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.48),0 0 0 1px rgba(42,147,102,.10);
+}
+.progress-row strong{font-size:10px;color:#644f45;font-variant-numeric:tabular-nums}
+.sun-icon,.gift-icon{width:25px;height:25px}.gift-icon{filter:drop-shadow(0 2px 2px rgba(130,67,81,.10))}
+.settings-btn{
+  flex-basis:27px;width:27px;height:27px;border-radius:9px;border:1px solid #e3d5ca;
+  background:linear-gradient(#fffdf9,#f5ece3);box-shadow:inset 0 1px 0 #fff,0 2px 4px rgba(79,52,42,.08);
+  color:#7b665c;
+}
+.settings-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* Scene depth: coherent lighting, grounding shadows, less "PNG on a webpage". */
+.shop-scene{
+  height:444px;
+  background:linear-gradient(180deg,#f7e6d2 0%,#efd3b4 69%,#e8bd91 100%);
+  isolation:isolate;
+}
+.scene-bg{opacity:.95;filter:saturate(.94) contrast(.98) brightness(1.02)}
+.shop-scene:before{
+  content:"";position:absolute;z-index:1;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 22%,rgba(255,247,215,.30),transparent 38%),
+    linear-gradient(90deg,rgba(255,255,255,.08),transparent 30%,transparent 70%,rgba(255,255,255,.05));
+  mix-blend-mode:screen;
+}
+.shop-scene:after{
+  z-index:11;
+  background:linear-gradient(to bottom,rgba(255,255,255,.02),transparent 58%,rgba(87,50,27,.10));
+  box-shadow:inset 0 -22px 32px -28px rgba(76,43,24,.45);
+}
+.awning{filter:drop-shadow(0 4px 4px rgba(104,68,46,.12))}
+.shop-sign{filter:drop-shadow(0 5px 5px rgba(102,62,41,.16))}
+.racks{left:5%;right:5%;top:134px;gap:5px}
+.rack-wrap{z-index:1;filter:drop-shadow(0 7px 5px rgba(91,55,34,.14))}
+.rack-wrap:after{
+  content:"";position:absolute;z-index:-1;left:12%;right:12%;bottom:-4px;height:13px;border-radius:50%;
+  background:rgba(88,52,31,.13);filter:blur(4px);pointer-events:none;
+}
+.rack-img{object-fit:contain;height:190px}
+.stock-sprite,.drink-row img{filter:drop-shadow(0 2px 1px rgba(81,47,28,.12))}
+.counter{height:auto;max-height:126px;object-fit:contain;filter:drop-shadow(0 8px 5px rgba(83,49,29,.16))}
+.register{filter:drop-shadow(0 3px 2px rgba(72,48,40,.16))}
+.cashier{filter:drop-shadow(0 5px 3px rgba(74,48,37,.15))}
+.shop-cat{filter:drop-shadow(0 4px 3px rgba(74,48,37,.12))}
+.boost-badge,.event-badge{
+  border-width:1px;box-shadow:0 5px 14px rgba(74,46,34,.12),inset 0 1px 0 rgba(255,255,255,.65);
+}
+
+/* Queue is now a foreground extension of the shop instead of a separate app section. */
+.customer-lane{
+  min-height:146px;padding:8px 11px 7px;border-top:0;
+  background:
+    linear-gradient(90deg,rgba(154,103,67,.05) 1px,transparent 1px) 0 0/54px 100%,
+    linear-gradient(180deg,#ecc9a5 0,#f2d7b9 20%,#f8e7d2 100%);
+  box-shadow:inset 0 14px 18px -19px rgba(76,43,24,.62),inset 0 -1px 0 rgba(255,255,255,.7);
+}
+.customer-lane:before{
+  content:"";position:absolute;left:0;right:0;top:0;height:1px;background:rgba(132,86,56,.15);pointer-events:none;
+}
+.customer{
+  padding:0 5px 4px;border-radius:18px;
+}
+.customer:before{
+  content:"";position:absolute;z-index:-1;left:50%;bottom:9px;width:72px;height:14px;transform:translateX(-50%);
+  border-radius:50%;background:rgba(92,57,37,.11);filter:blur(3px);pointer-events:none;
+}
+.customer-img{filter:drop-shadow(0 3px 2px rgba(79,51,39,.12))}
+.request-bubble{
+  border:1.5px solid rgba(194,159,135,.65);background:linear-gradient(#fff,#fff9f0);
+  box-shadow:0 5px 11px rgba(86,55,42,.10),inset 0 1px 0 #fff;
+}
+.patience{
+  height:9px;border:1px solid rgba(135,125,118,.25);background:#dedfdd;
+  box-shadow:inset 0 1px 2px rgba(70,73,71,.12),0 1px 0 rgba(255,255,255,.7);
+}
+.patience>i{box-shadow:inset 0 1px 0 rgba(255,255,255,.36)}
+.lane-hint{font-size:12px;color:#8b6d5c;letter-spacing:.01em;text-shadow:0 1px rgba(255,255,255,.75)}
+
+/* A single custom game control tray with tactile, illustrated actions. */
+.bottom-actions{
+  position:relative;gap:8px;padding:9px 9px calc(10px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,#fff7eb 0%,#f9ead9 100%);
+  border-top:1px solid rgba(149,104,75,.10);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.86);
+}
+.bottom-actions:before{
+  content:"";position:absolute;left:18%;right:18%;top:3px;height:2px;border-radius:999px;
+  background:rgba(168,121,88,.10);
+}
+.action-btn{
+  min-height:79px;border-radius:20px;border:1px solid rgba(72,54,67,.13);gap:5px;
+  text-shadow:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -2px 0 rgba(87,55,73,.08),0 5px 9px rgba(75,51,57,.13);
+  overflow:hidden;position:relative;
+}
+.action-btn:before{
+  content:"";position:absolute;left:8px;right:8px;top:5px;height:30%;border-radius:14px 14px 50% 50%;
+  background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0));pointer-events:none;
+}
+.action-btn strong{position:relative;z-index:2;font-size:13px;letter-spacing:-.01em;color:#fff}
+.action-icon{
+  position:relative;z-index:2;width:39px;height:39px;display:grid;place-items:center;border-radius:13px;
+  background:rgba(255,255,255,.86);box-shadow:0 3px 6px rgba(78,49,59,.12),inset 0 1px 0 #fff;
+  font-size:0;
+}
+.action-icon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round}
+.restock-btn{background:linear-gradient(180deg,#69c9f7 0%,#4ab4ed 58%,#3da5df 100%);color:#2f83b9}
+.upgrade-btn{background:linear-gradient(180deg,#bd9af0 0%,#9e75df 58%,#8c62cf 100%);color:#704ab2}
+.open-btn{background:linear-gradient(180deg,#ff93b0 0%,#f66d94 58%,#e95982 100%);color:#c94369}
+.action-btn:active:not(:disabled){transform:translateY(2px) scale(.992);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 2px 5px rgba(75,51,57,.12)}
+.action-btn:disabled{opacity:.46;filter:saturate(.45) grayscale(.25);box-shadow:inset 0 1px 0 rgba(255,255,255,.28)}
+
+/* Shared premium surface language for every modal. */
+.overlay{background:rgba(69,45,35,.34);backdrop-filter:saturate(.85) blur(2px)}
+.bottom-sheet,.upgrade-card,.settings-card,.summary-card,.unlock-card{
+  border:1px solid rgba(211,178,149,.78)!important;
+  background:linear-gradient(180deg,#fffdf8 0%,#fff8ee 68%,#fff3e6 100%)!important;
+  box-shadow:0 22px 50px rgba(68,42,32,.24),inset 0 1px 0 #fff!important;
+}
+.bottom-sheet{border-radius:27px 27px 0 0;padding:8px 12px calc(15px + env(safe-area-inset-bottom))}
+.sheet-grabber{width:36px;height:4px;background:#d3c4b8;margin-bottom:10px}
+.sheet-head,.upgrade-head,.settings-head{padding-bottom:8px;border-bottom:1px solid rgba(227,208,191,.72)}
+.sheet-head small,.upgrade-head small,.settings-head small{letter-spacing:.10em;text-transform:uppercase;color:#9a7867}
+.sheet-head h2,.upgrade-head h2,.settings-head h2{color:#5a4037;letter-spacing:-.025em}
+.circle-btn{
+  width:38px;height:38px;border:1px solid #e4d7cc;background:linear-gradient(#fffdf9,#f2e8df);color:#756056;
+  box-shadow:inset 0 1px 0 #fff,0 2px 5px rgba(72,49,39,.08);
+}
+
+/* Restock: illustrated product cards with a consistent information hierarchy. */
+.restock-cards{gap:8px;padding-top:2px}
+.restock-card{
+  position:relative;padding:8px 7px 7px;border:1px solid #ead8c8;border-radius:17px;
+  background:linear-gradient(180deg,#fff 0%,#fffaf4 100%);box-shadow:0 4px 10px rgba(77,50,39,.07),inset 0 1px 0 #fff;
+}
+.restock-art{height:58px;display:grid;place-items:center;margin:-2px 0 0;border-radius:13px;background:linear-gradient(180deg,#fff8ed,#fffdf9)}
+.restock-art img{width:54px!important;height:54px!important;filter:drop-shadow(0 3px 2px rgba(84,52,33,.10))}
+.restock-card h3{margin:5px 0 4px;font-size:12px;color:#503b34;letter-spacing:-.01em}
+.restock-price{height:24px;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:9px;background:#fff5d7;color:#76531c}
+.restock-price img{width:18px!important;height:18px!important}.restock-price strong{font-size:11px}
+.restock-stock-row{display:flex;justify-content:space-between;align-items:center;margin-top:6px;color:#8a7468;font-size:8px;font-weight:800}.restock-stock-row b{font-size:9px;color:#5f4a41}
+.mini-stock-track{height:5px;margin:3px 0 7px;border-radius:999px;background:#e6e4df;overflow:hidden;box-shadow:inset 0 1px 1px rgba(75,70,65,.08)}
+.mini-stock-track i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#74d7aa,#4fc392)}
+.buy-btn{
+  min-height:34px;border:1px solid rgba(42,130,182,.15);border-radius:10px;
+  background:linear-gradient(180deg,#61c4fa,#43abe9);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 2px 5px rgba(57,129,169,.14);
+  font-size:10px;letter-spacing:-.01em;
+}
+.buy-btn:disabled{background:linear-gradient(#d9dcdd,#c9cecf);border-color:transparent;box-shadow:none}
+
+/* Upgrade: fewer box-on-box layers, stronger hierarchy. */
+.upgrade-card{padding:15px 13px 14px}.upgrade-intro{margin:8px 3px 12px;font-size:10px;line-height:1.35;color:#8a7064}
+.upgrade-choices{gap:7px}
+.upgrade-choice{
+  padding:10px 6px 8px;border-radius:18px;border-width:1px!important;
+  box-shadow:0 4px 10px rgba(78,51,39,.07),inset 0 1px 0 rgba(255,255,255,.7);
+}
+.upgrade-choice:nth-child(1){background:linear-gradient(180deg,#effbf3,#e7f6ec)}
+.upgrade-choice:nth-child(2){background:linear-gradient(180deg,#fff9e2,#fff3ca)}
+.upgrade-choice:nth-child(3){background:linear-gradient(180deg,#fff0f4,#ffe4ec)}
+.upgrade-icon{width:50px;height:50px;margin:0 auto 4px;display:grid;place-items:center;border-radius:16px;background:rgba(255,255,255,.62);font-size:28px;box-shadow:inset 0 1px 0 #fff,0 2px 5px rgba(84,55,42,.06)}
+.upgrade-choice h3{font-size:13px}.upgrade-choice p{font-size:8.5px;line-height:1.25;color:#7c6960}
+.choose-upgrade,.maxed-label{min-height:33px;border-radius:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+
+/* Summary: one celebration card, not a dashboard of independent tiles. */
+.summary-card{padding:16px 16px 17px;border-radius:27px!important}
+.summary-mascot-wrap{position:relative;width:90px;height:58px;margin:0 auto 2px}
+.summary-mascot{width:82px;height:58px;object-fit:contain;filter:drop-shadow(0 4px 3px rgba(76,46,34,.11))}
+.summary-mascot-wrap span{position:absolute;color:#e8b33b;font-size:15px}.summary-mascot-wrap span:nth-of-type(1){left:2px;top:2px}.summary-mascot-wrap span:nth-of-type(2){right:1px;top:10px;font-size:11px}
+.summary-card h2{font-size:27px;letter-spacing:-.03em;color:#d94f74}.summary-result{margin:5px 0 8px;font-size:11px;color:#70584e}
+.summary-stats{gap:1px;padding:1px;border-radius:16px;background:#ead9cb;overflow:hidden;margin:11px 0}
+.summary-stats div{border:0;border-radius:0;background:#fffaf4;padding:9px 5px}.summary-stats small{font-size:8px;color:#94796d;text-transform:uppercase;letter-spacing:.035em}.summary-stats strong{font-size:16px;color:#4e3a33}
+.reward-section{padding-top:2px}.reward-section h3{font-size:13px;color:#5d453d;letter-spacing:-.01em}
+.reward-choices{gap:7px}.reward-card{min-height:122px;border-width:1px;border-radius:16px;box-shadow:0 4px 9px rgba(72,48,39,.06),inset 0 1px 0 rgba(255,255,255,.7)}
+.reward-art{width:45px;height:45px;display:grid;place-items:center;border-radius:14px;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 0 #fff,0 2px 5px rgba(72,48,39,.05)}
+.reward-art img{width:38px;height:38px;object-fit:contain}.reward-box svg{width:28px;height:28px;fill:none;stroke:#8b68c7;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.reward-card strong{font-size:10.5px;color:#544039}.reward-card small{font-size:8px;color:#826e65;line-height:1.25}
+.next-day-btn{border:1px solid rgba(187,63,98,.12);border-radius:14px;background:linear-gradient(180deg,#ff8eae,#ed5f87);box-shadow:inset 0 1px 0 rgba(255,255,255,.38),0 4px 8px rgba(186,71,104,.14);font-size:15px}
+
+/* Settings: cleaner, calmer and more product-like. */
+.settings-card{border-radius:27px!important;padding:15px 15px 13px}.setting-row{padding:11px 3px;border-color:rgba(226,207,190,.72)}.setting-row strong{font-size:13px;color:#554039}.setting-row small{font-size:9px;line-height:1.3;color:#90786d}.toggle-btn{width:48px;flex-basis:48px;height:28px;padding:3px}.toggle-btn span{width:22px;height:22px}.toggle-btn.on span{transform:translateX(20px)}.toggle-btn.on{background:linear-gradient(#70d2a7,#59be92)}
+.small-setting-btn,.release-banner button{border:1px solid rgba(73,126,98,.10);background:linear-gradient(#80caa8,#68b993);box-shadow:inset 0 1px 0 rgba(255,255,255,.35);font-size:9px}.danger-btn{background:#eee5df;color:#8a4a43;border-color:#e2d3cb}.settings-note{color:#9b8478}
+
+/* Transient feedback matches the same surface system. */
+.toast,.day-banner,.target-reached,.event-banner,.tutorial-coach,.release-banner{
+  border-width:1px!important;box-shadow:0 12px 28px rgba(75,48,37,.16),inset 0 1px 0 rgba(255,255,255,.72)!important;
+}
+.toast{background:rgba(255,250,241,.96);backdrop-filter:blur(6px);font-size:10px}
+.day-banner,.event-banner,.tutorial-coach,.release-banner{background:linear-gradient(180deg,rgba(255,253,248,.98),rgba(255,247,237,.97))}
+.target-reached{background:linear-gradient(#fffbe8,#fff5cb)}
+
+/* Loading feels branded rather than like a generic blocking screen. */
+.startup-loading{background:linear-gradient(180deg,#fffaf2,#f5e8d9)}
+.startup-loading:after{content:"";width:46px;height:5px;border-radius:999px;background:linear-gradient(90deg,#74d7aa 0 45%,#e3d8ce 45%);animation:premiumLoad 1.15s ease-in-out infinite alternate;margin-top:4px}
+.startup-loading img{border-radius:24px;box-shadow:0 10px 28px rgba(84,56,43,.15)}
+.startup-loading strong{letter-spacing:-.025em;color:#5d4035}.startup-loading span{color:#9a7e70;font-size:10px}
+@keyframes premiumLoad{from{transform:scaleX(.7);opacity:.7}to{transform:scaleX(1);opacity:1}}
+
+.tiny-footer{padding:7px 0 1px;font-size:9px;letter-spacing:.035em;color:#a18878;font-weight:800}
+
+@media (max-width:360px){
+  .app-shell{padding-left:3px;padding-right:3px}.game{border-radius:27px}.hud{padding-left:6px;padding-right:6px}.hud-panel{padding-left:6px;padding-right:6px}.hud-card{padding:0 3px}.hud-card img{width:25px;height:25px}.hud-card strong{font-size:13px}
+  .shop-scene{height:413px}.racks{top:128px;gap:3px}.rack-img{height:177px}.customer-lane{min-height:139px}.bottom-actions{gap:6px;padding-left:7px;padding-right:7px}.action-btn{min-height:72px;border-radius:17px}.action-icon{width:35px;height:35px}.action-icon svg{width:21px;height:21px}.action-btn strong{font-size:12px}
+  .restock-card{padding:6px 5px}.restock-art{height:50px}.restock-art img{width:47px!important;height:47px!important}.restock-price{height:21px}.restock-stock-row{font-size:7px}.buy-btn{font-size:9px}
+  .summary-card{width:calc(100% - 22px)}
+}
+@media (prefers-reduced-motion:reduce){.startup-loading:after{animation:none!important}}

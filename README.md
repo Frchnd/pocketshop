@@ -1,48 +1,51 @@
-# Pocket Shop M4 — PWA Release Build
+# Pocket Shop M4.5 — Premium UI/UX Polish
 
-M4 focuses on release reliability rather than adding new gameplay. The Day 1–5 loop, customer types, upgrades, rewards, events, tutorial, animation and audio from M3 remain intact.
+M4.5 is a presentation-focused update on top of the stable M4 PWA build. Gameplay, economy, Day 1–5 progression, rewards, upgrades, events, tutorial, save schema and offline architecture are intentionally unchanged.
 
-## What changed in M4
+## What changed
 
-- safer PWA update lifecycle: a downloaded update waits until the player chooses **Refresh**;
-- in-app **Check for Updates** control;
-- install prompt support when the browser exposes it;
-- startup/loading cover so the game does not flash partially initialized UI;
-- visible offline mode indicator;
-- network-first navigation with cached offline fallback;
-- cache cleanup when a new service worker activates;
-- M3 save v6 -> M4 save v7 migration;
-- corrupt-current-save backup and safe fallback to an older valid save when available;
-- local **Reset Progress** control with a two-tap guard;
-- dedicated `any` and `maskable` PWA icons;
-- game art converted from PNG to lossless WebP, reducing core art payload by about 26% without intentionally changing the visual design;
-- GitHub Pages `.nojekyll` marker included.
+- Rebuilt the HUD as one integrated control deck instead of three floating cards.
+- Reworked scene lighting, grounding shadows and visual depth around racks, cashier and counter.
+- Cleaned the original art cutouts so product, rack, character, sign, counter and icon backgrounds are genuinely transparent instead of looking pasted onto the scene.
+- Integrated the customer queue visually with the shop floor.
+- Rebuilt the three primary actions with consistent custom SVG icons and tactile button treatment.
+- Reworked Restock cards with a clear art / price / stock / action hierarchy and a compact stock meter.
+- Unified Restock, Upgrade, Settings, Summary and Unlock surfaces into one visual system.
+- Reworked reward cards and Day Complete presentation.
+- Tightened typography, spacing, borders, shadows, focus states and micro-interactions.
+- Kept reduced-motion support and the existing touch-first behavior.
+- Updated release identity to **M4.5** and service-worker cache to `pocket-shop-m45-v9`.
 
-## Updating the existing GitHub Pages deployment
+## Important compatibility notes
+
+- Save schema remains **v7**, so M4 progress carries over without migration or reset.
+- All M4 gameplay values and systems remain intact.
+- Existing installed M4 PWAs can update to M4.5 through the release/update system already added in M4.
+- Cleaned/optimized game art is about **23.7% smaller** than the M4 asset payload while preserving the same visual identity.
+
+## Update your GitHub Pages deployment
 
 1. Extract this ZIP.
-2. Replace the files in the same GitHub repository with **the contents of `pocket-shop-m4-deploy/`**.
-3. Commit to the branch used by GitHub Pages.
-4. Wait until GitHub Pages finishes deployment.
-5. Because the current M3 service worker is cache-first, fully close every open Pocket Shop browser tab and the installed PWA once after deploying M4.
-6. Reopen Pocket Shop. The footer should say **M4**.
-7. Open Settings -> App Update -> Check. It should report that M4 is up to date.
+2. Replace the files in the existing Pocket Shop repository with all files from this folder.
+3. Commit/push to `main`.
+4. Wait for GitHub Pages to finish deploying.
+5. Open the installed Pocket Shop PWA.
+6. Open **Settings → App Update → Check**.
+7. If `Update ready` appears, choose **Refresh**.
+8. Confirm the footer says **M4.5**.
 
-From M4 onward, when a future service worker update finishes downloading, Pocket Shop can show an **Update ready** banner instead of silently replacing files mid-session.
+If the old version is still displayed after GitHub Pages has deployed, fully close Pocket Shop and its browser tab once, reopen it, then use **App Update → Check** again.
 
-## Fresh deployment
+## What to inspect on your phone
 
-No build command is required. Deploy this folder as a static site. `index.html` must remain at the repository/site root together with `manifest.webmanifest` and `service-worker.js`.
+The logic build has already passed automated regression checks. Device QA should focus on the things that cannot be faithfully reproduced in this execution environment:
 
-## Save behavior
+- whether the new HUD feels visually integrated;
+- whether racks/items look clean without rectangular cutout backgrounds;
+- customer queue spacing on your actual screen;
+- bottom-button proportions and thumb comfort;
+- Restock/Upgrade/Summary modal scale;
+- Android standalone PWA safe areas;
+- Web Audio behavior after first tap.
 
-- Progress is local to the browser/device.
-- M3 save data is migrated automatically.
-- Active customers, active events, modal state and mid-sale state are intentionally not persisted.
-- Reloading during a running day returns safely to PREP for that same saved day.
-- If the current M4 save JSON is corrupted, Pocket Shop backs up the bad raw value and attempts to recover from the newest valid older save.
-- Reset Progress removes Pocket Shop local saves from this origin and reloads the game.
-
-## M4 validation
-
-See `QA_REPORT.md`. Automated game/save logic, static package integrity, release lifecycle mocks and all service-worker core URLs passed. Real Chromium navigation could not be executed in the build container because localhost navigation is blocked by administrator policy, so final device-specific PWA shell/audio/visual behavior should still be checked on the actual Android phone after deployment.
+See `QA_REPORT.md` for the exact automated checks completed before the deployment ZIP was created.

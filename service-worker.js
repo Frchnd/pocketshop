@@ -1,4 +1,4 @@
-const CACHE='pocket-shop-m4-v8';
+const CACHE='pocket-shop-m45-v9';
 const CORE=[
   './','./index.html','./manifest.webmanifest','./css/style.css',
   './js/data.js','./js/save.js','./js/game.js','./js/audio.js','./js/ui.js','./js/release.js','./js/app.js',

@@ -51,7 +51,7 @@ window.PS_UI = (() => {
 
   function renderRestock(s){
     const items=s.unlockedItems.map(id=>D.items[id]).filter(Boolean);
-    el.restockCards.innerHTML=items.map(item=>{const room=s.maxStock-s.inventory[item.id],qty=Math.min(2,room),cost=qty*item.buyPrice,dis=qty<=0||s.coins<cost;return `<article class="restock-card"><img src="${item.icon}" alt="${item.name}"><h3>${item.name}</h3><div class="restock-meta">🪙 ${cost}<br>Stock ${s.inventory[item.id]} / ${s.maxStock}</div><button class="buy-btn" type="button" data-buy="${item.id}" ${dis?'disabled':''}>${qty?`Buy +${qty}`:'Full'}</button></article>`;}).join('');
+    el.restockCards.innerHTML=items.map(item=>{const room=s.maxStock-s.inventory[item.id],qty=Math.min(2,room),cost=qty*item.buyPrice,dis=qty<=0||s.coins<cost,pct=Math.max(0,Math.min(100,(s.inventory[item.id]/s.maxStock)*100));return `<article class="restock-card"><div class="restock-art"><img src="${item.icon}" alt="${item.name}"></div><h3>${item.name}</h3><div class="restock-price"><img src="./assets/icons/icon-coin.webp" alt=""><strong>${cost}</strong></div><div class="restock-stock-row"><span>Stock</span><b>${s.inventory[item.id]} / ${s.maxStock}</b></div><div class="mini-stock-track" aria-hidden="true"><i style="width:${pct}%"></i></div><button class="buy-btn" type="button" data-buy="${item.id}" ${dis?'disabled':''}>${qty?`Restock +${qty}`:'Full'}</button></article>`;}).join('');
     if(tutorialStep===1){const first=el.restockCards.querySelector('.buy-btn:not(:disabled)');if(first)first.classList.add('tutorial-buy-focus');}
   }
   function openRestock(){const s=window.PS_GAME.getState();if(!['PREP','RUNNING'].includes(s.phase))return;window.PS_GAME.setPaused(true);renderRestock(window.PS_GAME.getState());el.restockOverlay.hidden=false;if(tutorialStep===1)el.game.classList.add('tutorial-restock-open');setTimeout(()=>$('#closeRestockBtn')?.focus(),0);}
@@ -97,16 +97,16 @@ window.PS_UI = (() => {
   function rewardCards(s){
     const a=window.PS_GAME.rewardAvailability();
     return [
-      `<button type="button" class="reward-card cash" data-reward="cash"><span>🪙</span><strong>+${a.cashAmount} Coins</strong><small>A little extra for tomorrow!</small></button>`,
-      `<button type="button" class="reward-card stock" data-reward="stock" ${a.freeStock?'':'disabled'}><span>📦</span><strong>Free Stock</strong><small>${a.freeStock?'Up to 2 random items get +2.':'All unlocked stock is full.'}</small></button>`,
-      `<button type="button" class="reward-card boost" data-reward="boost"><span>☀️</span><strong>Next-Day Boost</strong><small>+10% sell price tomorrow.</small></button>`
+      `<button type="button" class="reward-card cash" data-reward="cash"><span class="reward-art"><img src="./assets/icons/icon-coin.webp" alt=""></span><strong>+${a.cashAmount} Coins</strong><small>A little extra for tomorrow</small></button>`,
+      `<button type="button" class="reward-card stock" data-reward="stock" ${a.freeStock?'':'disabled'}><span class="reward-art reward-box"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg></span><strong>Free Stock</strong><small>${a.freeStock?'Two random items get +2':'All unlocked stock is full'}</small></button>`,
+      `<button type="button" class="reward-card boost" data-reward="boost"><span class="reward-art"><img src="./assets/icons/icon-sun.webp" alt=""></span><strong>Next-Day Boost</strong><small>+10% sell price tomorrow</small></button>`
     ].join('');
   }
 
   function renderSummary(s){
     if(lastSummaryDay!==s.day){lastSummaryDay=s.day;window.PS_AUDIO?.sfx('dayComplete');}
     const success=s.revenue>=s.target,bonus=s.bonusCoinsEarned>0?` • +${s.bonusCoinsEarned} patience bonus`:'';
-    el.summaryResult.textContent=success?`🎯 Target reached!${bonus}`:`🎯 Target not reached • +30 consolation coins${bonus}`;
+    el.summaryResult.textContent=success?`Target reached!${bonus}`:`Target not reached • +30 consolation coins${bonus}`;
     el.sumRevenue.textContent=s.revenue;el.sumServed.textContent=s.served;el.sumLost.textContent=s.lost;
     const best=Object.keys(s.sold).sort((a,b)=>s.sold[b]-s.sold[a])[0];el.sumBest.textContent=s.sold[best]?`${D.items[best].name} ×${s.sold[best]}`:'—';
     el.rewardSection.hidden=!success;el.summaryContinue.hidden=success;if(success)el.rewardChoices.innerHTML=rewardCards(s);el.summaryOverlay.hidden=false;
